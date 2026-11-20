@@ -277,6 +277,18 @@ function pickSession(words,size){
   const sorted=shuffle(words).sort((a,b)=>{const ra=rank(a),rb=rank(b);if(ra!==rb)return ra-rb;return ra===2?S.prog[a.h].due-S.prog[b.h].due:0});
   return shuffle(size?sorted.slice(0,size):sorted);
 }
+const MIX_MAX=20;
+/* 1 bộ: học hết. Nhiều bộ: tối đa 20 từ, nhớ các từ đã ra để lượt sau xoay sang từ còn lại */
+function pickStart(sel){
+  const pool=poolFrom(sel);
+  if(sel.length<=1||pool.length<=MIX_MAX)return pickSession(pool,0);
+  S.ui.rot=S.ui.rot||{};const key=[...sel].sort().join('|');const inPool=new Set(pool.map(w=>w.h));
+  let done=new Set((S.ui.rot[key]||[]).filter(h=>inPool.has(h)));
+  let pick=pickSession(pool.filter(w=>!done.has(w.h)),MIX_MAX);
+  if(pick.length<MIX_MAX){const got=new Set(pick.map(w=>w.h));const extra=pickSession(pool.filter(w=>!got.has(w.h)),MIX_MAX-pick.length);done=new Set(extra.map(w=>w.h));pick=shuffle([...pick,...extra])}
+  else pick.forEach(w=>done.add(w.h));
+  S.ui.rot[key]=[...done];save();return pick;
+}
 function markDay(){const t=today();if(!S.days.includes(t)){S.days.push(t);S.days.sort((a,b)=>a-b);if(S.days.length>400)S.days=S.days.slice(-400)}}
 function streak(){const set=new Set(S.days);let t=today();if(!set.has(t))t--;let n=0;while(set.has(t)){n++;t--}return n}
 function grade(h,ok,firstTry){
@@ -380,7 +392,7 @@ let tab='learn',deckOpen=null;
 function render(){
   document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.v===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   const guest=mode==='guest';
-  $('.tabbar').hidden=mode==='gate';$('#hdr-exit').hidden=!guest;
+  $('.tabbar').hidden=mode!=='owner';$('#hdr-exit').hidden=!guest;
   if(mode==='gate'){$('#hdr-sync').hidden=true;$('#lastsync').textContent='';$('#main').innerHTML=vGate();const c=$('#gate-code');if(c)setTimeout(()=>c.focus(),50);return}
   $('#hdr-sync').hidden=!S.gs.url||guest;
   $('#lastsync').textContent=guest?'Chế độ khách: tiến độ không được lưu':!S.gs.url?'Chưa nối Google Sheet':S.gs.last?'Đồng bộ lần cuối: '+fmtDate(S.gs.last):'Chưa đồng bộ lần nào';
@@ -390,19 +402,19 @@ function seg(act,cur,opts){return`<div class="seg" role="group">${opts.map(([k,l
 function vLearn(){
   const decks=Object.values(S.decks);const due=dueWords().length;const st=streak();const set=S.set;
   S.ui.sel=S.ui.sel.filter(k=>S.decks[k]);
-  const n=poolFrom(S.ui.sel).length;const take=set.size?Math.min(n,set.size):n;
-  return`<section class="panel today">
+  const n=poolFrom(S.ui.sel).length;const mix=S.ui.sel.length>1;const take=mix?Math.min(n,MIX_MAX):n;
+  return`${mode==='guest'?'<section class="panel today"><div class="today-txt">Mời bạn trải nghiệm, tuy nhiên tiến độ của bạn không được ghi lại vì đây là app sử dụng riêng của Duy Anh ạ!</div></section>':`<section class="panel today">
     <div class="today-txt">${due?`Hôm nay có <b>${due} từ</b> đến hạn ôn.`:'Hôm nay không có từ nào đến hạn ôn.'}</div>
     <div class="small muted">${st?`Bạn đã học ${st} ngày liên tiếp.`:'Học một lượt hôm nay để bắt đầu chuỗi ngày học.'}</div>
     ${due?`<button class="btn primary block" data-act="start-due">Ôn ${due} từ đến hạn</button>`:''}
-  </section>
+  </section>`}
   <h2>Cách học</h2>${seg('mode',set.mode,[['card','Thẻ lật'],['quiz','Trắc nghiệm'],['match','Nối từ']])}
   <h2>Chọn bộ để học</h2>
   ${decks.length?`<div class="panel tight">${decks.map(d=>{const s=deckStats(d);return`<label class="deckrow"><input type="checkbox" data-act="sel" data-k="${esc(d.key)}" ${S.ui.sel.includes(d.key)?'checked':''}><div class="grow"><div class="dname">${esc(d.name)} ${d.locked?'<span class="tag">Đã khóa</span>':''}</div><div class="small muted">${s.n} từ, đã thuộc ${s.pct}%</div><div class="bar"><i style="width:${s.pct}%"></i></div></div></label>`}).join('')}</div>
   <div class="rowbtns"><button class="btn" data-act="rand">Chọn ngẫu nhiên</button><button class="btn" data-act="selall">${S.ui.sel.length===decks.length?'Bỏ chọn hết':'Chọn tất cả'}</button></div>`
   :`<div class="panel empty">Chưa có bộ từ nào. Thêm bộ từ vào Google Sheet rồi bấm nút đồng bộ ở góc trên.</div>`}
-  <h2>Số từ mỗi lượt</h2>${seg('size',set.size,[[10,'10'],[20,'20'],[30,'30'],[0,'Tất cả']])}
-  <button class="btn primary block go" data-act="start" ${n?'':'disabled'}>${n?`Bắt đầu học ${take} từ`:'Chọn ít nhất một bộ để bắt đầu'}</button>`;
+  <button class="btn primary block go" data-act="start" ${n?'':'disabled'}>${n?`Bắt đầu học ${take} từ`:'Chọn ít nhất một bộ để bắt đầu'}</button>
+  <p class="hint">${!n?'':mix?(n>MIX_MAX?`Trộn ${S.ui.sel.length} bộ (${n} từ): mỗi lượt tối đa ${MIX_MAX} từ, lượt sau ưu tiên các từ chưa học để ôn đều.`:`Trộn ${S.ui.sel.length} bộ, học hết ${n} từ.`):'Học hết các từ trong bộ.'}</p>`;
 }
 function vProg(){
   const ix=idx();const all=Object.keys(ix);const c=[0,0,0,0,0,0];let fresh=0;
@@ -638,10 +650,10 @@ document.addEventListener('click',e=>{
     case'size':S.set.size=+v;save();render();break;
     case'rand':{const keys=Object.keys(S.decks);if(!keys.length)break;const n=keys.length<=2?keys.length:2+Math.floor(Math.random()*Math.min(2,keys.length-2));S.ui.sel=shuffle(keys).slice(0,n);save();render();toast(`Đã chọn ngẫu nhiên ${n} bộ`);break}
     case'selall':{const keys=Object.keys(S.decks);S.ui.sel=S.ui.sel.length===keys.length?[]:keys;save();render();break}
-    case'start':{const sel=S.ui.sel.filter(x=>S.decks[x]);const names=sel.map(x=>S.decks[x].name);startSession(pickSession(poolFrom(sel),S.set.size),names.length>2?`Trộn ${names.length} bộ`:names.join(' + '));break}
+    case'start':{const sel=S.ui.sel.filter(x=>S.decks[x]);const names=sel.map(x=>S.decks[x].name);startSession(pickStart(sel),names.length>2?`Trộn ${names.length} bộ`:names.join(' + '));break}
     case'start-due':startSession(shuffle(dueWords()),'Ôn hôm nay');break;
     case'start-hard':{const ix=idx();startSession(Object.entries(S.prog).filter(([h,p])=>ix[h]&&p.w>=2).sort((a,b)=>b[1].w-a[1].w).slice(0,12).map(([h])=>ix[h]),'Từ hay quên','quiz');break}
-    case'study-deck':startSession(pickSession(S.decks[k].words,S.set.size),S.decks[k].name);break;
+    case'study-deck':startSession(pickSession(S.decks[k].words,0),S.decks[k].name);break;
     case'open':deckOpen=k;render();scrollTo(0,0);break;
     case'close-deck':deckOpen=null;render();break;
     case'edit':openEdit(k,+a.dataset.i);break;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -158,7 +158,8 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 .sync-on{opacity:.6;pointer-events:none}
 [hidden]{display:none!important}
 .hsync{position:absolute;right:-8px;top:0}
-.hexit{position:absolute;left:0;top:4px}
+.hexit{position:absolute;right:0;top:4px}
+.hlang{position:absolute;left:-4px;top:2px;min-width:44px;height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:600 14px var(--ui);color:var(--ink2);cursor:pointer}
 .gate{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 8px}
 .gate-q{font-family:var(--hz);font-size:30px;font-weight:700;letter-spacing:.04em}
 .gate .rowbtns{width:100%;max-width:320px}
@@ -173,41 +174,111 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 </head>
 <body>
 <div id="app">
-  <header class="top"><div class="logo" role="img" aria-label="維英學字"><span>維</span><span>英</span><span>學</span><span>字</span></div><div class="brand-py">Wéi Yīng Xué Zì</div><div class="lastsync" id="lastsync"></div><button class="link hexit" id="hdr-exit" data-act="gate-exit" hidden>Thoát</button><button class="icon hsync" id="hdr-sync" data-act="sync" aria-label="Đồng bộ Google Sheet" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v3h3M4 13a8 8 0 0 0 14.6 4.5M20 20v-3h-3"/></svg></button></header>
+  <header class="top">
+    <button class="hlang" id="hdr-lang" data-act="lang" aria-label="Language">繁</button>
+    <button class="link hexit" id="hdr-exit" data-act="gate-exit" hidden></button>
+    <div class="logo" role="img" aria-label="維英學字"><span>維</span><span>英</span><span>學</span><span>字</span></div>
+    <div class="brand-py">Wéi Yīng Xué Zì</div>
+    <div class="lastsync" id="lastsync"></div>
+    <button class="icon hsync" id="hdr-sync" data-act="sync" aria-label="Sync" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.6-4.5M4 4v3h3M4 13a8 8 0 0 0 14.6 4.5M20 20v-3h-3"/></svg></button>
+  </header>
   <main id="main"></main>
 </div>
-<nav class="tabbar" aria-label="Điều hướng"><div class="in">
-  <button data-act="tab" data-v="learn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="13" height="16" rx="2"/><path d="M4 7v11a3 3 0 0 0 3 3h9"/></svg>Học</button>
-  <button data-act="tab" data-v="prog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg>Tiến độ</button>
+<nav class="tabbar" hidden><div class="in">
+  <button data-act="tab" data-v="learn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="13" height="16" rx="2"/><path d="M4 7v11a3 3 0 0 0 3 3h9"/></svg><span id="tab-learn"></span></button>
+  <button data-act="tab" data-v="prog"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg><span id="tab-prog"></span></button>
 </div></nav>
 <div id="session" hidden></div>
 <div id="sheet" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.26.0/dist/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.4.2/dist/umd/t2cn.js"></script>
 <script>
 "use strict";
-const KEY='duyanh-hoc-tu-v1';
-const INT=[0,1,3,7,14,30];
-const QTIME=10000,REVEAL_MS=3000,SLOTS=5;
-// Link cầu nối Google Sheet (Apps Script, đuôi /exec). Dán vào giữa hai dấu nháy.
+const KEY='duyanh-hoc-tu-v1',LKEY='duyanh-hoc-tu-lang';
+// Link cầu nối Google Sheet (Apps Script, đuôi /exec).
 const GS_URL='https://script.google.com/macros/s/AKfycbxjTZbd66Dj6jltp0A8XKN8OSgrxhChYHmdiBH3S-f5fOp2uuLDW2oBwF_nnzw814Gn/exec';
-const BOX_LABEL=['Mới học, vừa quên','Ôn sau 1 ngày','Ôn sau 3 ngày','Ôn sau 7 ngày','Ôn sau 14 ngày','Thuộc chắc'];
+const CODE_HASH='e78f04d78770726a7256ede9d77e9757e20cd890927d4d123670ce41e6f8af3a';
+const INT=[0,1,3,7,14,30];
+const QTIME=10000,REVEAL_MS=3000,SLOTS=5,MIX_MAX=20,MATCH_SEC=10000,MIN_PAIRS=3;
 const SEED={name:'NHÓM 3 - PHƯƠNG HƯỚNG KHÔNG GIAN GIẢI TRÍ',words:[['地方','Địa phương'],['北部','Bắc bộ'],['南部','Nam bộ'],['中埔','Trung bộ'],['電影院','Rạp chiếu phim'],['大樓','Nhà cao tầng'],['游泳池','Hồ bơi']]};
 const CJK=/[\u3400-\u9fff\uf900-\ufaff]/;
+
+/* ---------- ngôn ngữ giao diện ---------- */
+const I18N={
+zh:{tabLearn:'學習',tabProg:'進度',lang:'語言',exit:'離開',
+ dueSome:'今天有 <b>{n} 個詞</b>需要複習。',dueNone:'今天沒有需要複習的詞。',streak:'已連續學習 {n} 天。',streak0:'今天學一輪，開始累積連續天數。',reviewBtn:'複習 {n} 個到期的詞',
+ guestMsg:'歡迎體驗！不過這是維英的個人 app，你的學習進度不會被記錄喔！',
+ mode:'學習方式',mCard:'翻卡',mQuiz:'選擇題',mMatch:'配對',chooseDecks:'選擇詞組',deckMeta:'{n} 個詞，已記住 {p}%',rand:'隨機選',selAll:'全選',selNone:'全部取消',
+ noDecks:'還沒有詞組。請先在 Google 試算表新增，再按上方的同步鍵。',start:'開始學 {n} 個詞',startNone:'請至少選一個詞組',
+ hintMixMax:'混合 {d} 個詞組（共 {n} 個詞）：每輪最多 {m} 個詞，下一輪優先出還沒練到的詞。',hintMixAll:'混合 {d} 個詞組，全部 {n} 個詞。',hintSingle:'學完整個詞組。',randToast:'已隨機選了 {n} 個詞組',
+ statWords:'個詞',statMem:'個詞已記住',statStreak:'連續天數',levels:'記憶程度',levelNames:['未學','新學／剛忘記','1 天後複習','3 天後複習','7 天後複習','14 天後複習','已熟記'],
+ hard:'常忘的詞',wrongN:'錯 {n} 次',hardBtn:'用選擇題複習這些詞',hardNone:'還沒有錯兩次以上的詞。',decksH:'各詞組',deckCard:'{n} 個詞，已記住 {k}/{n}',deckDue:'，{d} 個到期',
+ back:'‹ 進度',deckInfo:'{n} 個詞，已記住 {k} 個。',studyDeck:'學這個詞組',deckNote:'點詞可以聽發音。要修改詞，請在 Google 試算表修改再同步。拼音由 app 自動產生，若有錯，可在試算表加「Pinyin」欄，只填寫錯的那個詞。五個綠點代表記憶程度。',
+ notLinked:'尚未連接 Google 試算表',neverSynced:'尚未同步',lastSync:'上次同步：{t}',syncing:'同步中…',guestLine:'訪客模式：不保存進度',
+ codeSub:'',enter:'進入',goBack:'返回',codeErr:'密碼不對，再試一次。',
+ ok:'記得',no:'還不會',flip:'點一下翻面',undo:'復原',cardHint:'會了往右滑，不會往左滑',
+ timeUp10:'時間到。',notQuite:'不對喔。',answer:'答案：',next:'下一題',
+ mistakes:'配錯：{n}',secLeft:'剩 {s} 秒',matchHint:'先點漢字，再點對應的意思。平均每 10 秒要配對一個，不然就輸了。',
+ lostTitle:'時間到！',lostText:'你配對了 {k}/{n} 個詞。平均每 10 秒要配對一個。',playAgain:'再玩一次',
+ doneTitle:'完成一輪',doneFirst:'{f}/{t} 個詞第一次就答對',doneFirstM:'{f}/{t} 個詞第一次就配對成功',doneRedo:'，{n} 個詞要再練',doneTime:'。用時 {t}。',tricky:'難詞',again:'再練這 {n} 個詞',home:'回首頁',
+ tReview:'今日複習',tMix:'混合 {n} 個詞組',tHard:'常忘的詞',tRedo:'再練不會的詞',
+ noWords:'沒有可以學的詞',needTwo:'至少要有 2 個詞才能做選擇題',synced:'已同步 {n} 個詞組',sheetEmpty:'Google 試算表裡還沒有詞組',
+ errClaude:'Claude 預覽版無法連線，放上 GitHub 後就能同步。',errNet:'連不上 Google 試算表，請檢查網路。',errGen:'同步失敗：{e}',noSpeech:'這個瀏覽器不支援朗讀',storeFail:'這台裝置無法儲存資料'},
+en:{tabLearn:'Learn',tabProg:'Progress',lang:'Language',exit:'Exit',
+ dueSome:'<b>{n} words</b> are due for review today.',dueNone:'No words are due for review today.',streak:'You\u2019ve studied {n} days in a row.',streak0:'Finish one round today to start a streak.',reviewBtn:'Review {n} due words',
+ guestMsg:'You\u2019re welcome to try it out, but your progress won\u2019t be saved since this is Duy Anh\u2019s personal app!',
+ mode:'Mode',mCard:'Flashcards',mQuiz:'Quiz',mMatch:'Match',chooseDecks:'Choose decks',deckMeta:'{n} words, {p}% learned',rand:'Random pick',selAll:'Select all',selNone:'Clear all',
+ noDecks:'No decks yet. Add one to the Google Sheet, then tap sync at the top.',start:'Start {n} words',startNone:'Pick at least one deck',
+ hintMixMax:'Mixing {d} decks ({n} words): up to {m} words per round; the next round favors words not yet covered.',hintMixAll:'Mixing {d} decks, all {n} words.',hintSingle:'Every word in the deck.',randToast:'Randomly picked {n} decks',
+ statWords:'words in decks',statMem:'words remembered',statStreak:'day streak',levels:'Memory level',levelNames:['Not started','New / just forgot','Review in 1 day','Review in 3 days','Review in 7 days','Review in 14 days','Mastered'],
+ hard:'Often forgotten',wrongN:'wrong {n}\u00d7',hardBtn:'Review these with a quiz',hardNone:'No word has been missed twice yet.',decksH:'Decks',deckCard:'{n} words, {k}/{n} learned',deckDue:', {d} due',
+ back:'\u2039 Progress',deckInfo:'{n} words, {k} learned.',studyDeck:'Study this deck',deckNote:'Tap a word to hear it. To change a word, edit the Google Sheet, then sync. Pinyin is generated automatically; if one is wrong, add a \u201cPinyin\u201d column to the Sheet and fill in just that word. The five green dots show how well you remember it.',
+ notLinked:'Google Sheet not linked',neverSynced:'Not synced yet',lastSync:'Last synced: {t}',syncing:'Syncing\u2026',guestLine:'Guest mode: progress isn\u2019t saved',
+ codeSub:'Enter the code',enter:'Enter',goBack:'Back',codeErr:'Wrong code, try again.',
+ ok:'Got it',no:'Not yet',flip:'Tap to flip',undo:'Undo',cardHint:'Swipe right if you know it, left if you don\u2019t',
+ timeUp10:'Time\u2019s up.',notQuite:'Not quite.',answer:'Answer:',next:'Next',
+ mistakes:'Mistakes: {n}',secLeft:'{s}s left',matchHint:'Tap a character, then its meaning. Average one match every 10 seconds or you lose.',
+ lostTitle:'Time\u2019s up!',lostText:'You matched {k}/{n} words. You need one match every 10 seconds on average.',playAgain:'Play again',
+ doneTitle:'Round complete',doneFirst:'{f}/{t} right on the first try',doneFirstM:'{f}/{t} matched on the first try',doneRedo:', {n} to relearn',doneTime:'. Time {t}.',tricky:'Tricky',again:'Relearn these {n} words',home:'Back to home',
+ tReview:'Today\u2019s review',tMix:'{n} decks mixed',tHard:'Often forgotten',tRedo:'Relearn missed words',
+ noWords:'No words to study',needTwo:'You need at least 2 words for a quiz',synced:'Synced {n} decks',sheetEmpty:'The Google Sheet has no decks yet',
+ errClaude:'The Claude preview can\u2019t connect out. Sync works once the app is on GitHub.',errNet:'Couldn\u2019t reach the Google Sheet. Check your connection.',errGen:'Sync failed: {e}',noSpeech:'This browser can\u2019t read aloud',storeFail:'This device can\u2019t save data'},
+vi:{tabLearn:'Học',tabProg:'Tiến độ',lang:'Ngôn ngữ',exit:'Thoát',
+ dueSome:'Hôm nay có <b>{n} từ</b> đến hạn ôn.',dueNone:'Hôm nay không có từ nào đến hạn ôn.',streak:'Bạn đã học {n} ngày liên tiếp.',streak0:'Học một lượt hôm nay để bắt đầu chuỗi ngày học.',reviewBtn:'Ôn {n} từ đến hạn',
+ guestMsg:'Mời bạn trải nghiệm, tuy nhiên tiến độ của bạn không được ghi lại vì đây là app sử dụng riêng của Duy Anh ạ!',
+ mode:'Cách học',mCard:'Thẻ lật',mQuiz:'Trắc nghiệm',mMatch:'Nối từ',chooseDecks:'Chọn bộ để học',deckMeta:'{n} từ, đã thuộc {p}%',rand:'Chọn ngẫu nhiên',selAll:'Chọn tất cả',selNone:'Bỏ chọn hết',
+ noDecks:'Chưa có bộ từ nào. Thêm bộ từ vào Google Sheet rồi bấm nút đồng bộ ở góc trên.',start:'Bắt đầu học {n} từ',startNone:'Chọn ít nhất một bộ để bắt đầu',
+ hintMixMax:'Trộn {d} bộ ({n} từ): mỗi lượt tối đa {m} từ, lượt sau ưu tiên các từ chưa học để ôn đều.',hintMixAll:'Trộn {d} bộ, học hết {n} từ.',hintSingle:'Học hết các từ trong bộ.',randToast:'Đã chọn ngẫu nhiên {n} bộ',
+ statWords:'từ trong các bộ',statMem:'từ đang nhớ',statStreak:'ngày học liên tiếp',levels:'Từ theo mức ghi nhớ',levelNames:['Chưa học','Mới học, vừa quên','Ôn sau 1 ngày','Ôn sau 3 ngày','Ôn sau 7 ngày','Ôn sau 14 ngày','Thuộc chắc'],
+ hard:'Từ hay quên',wrongN:'sai {n} lần',hardBtn:'Ôn các từ này bằng trắc nghiệm',hardNone:'Chưa có từ nào sai từ 2 lần trở lên.',decksH:'Từng bộ từ',deckCard:'{n} từ, đã thuộc {k}/{n}',deckDue:', {d} từ đến hạn ôn',
+ back:'‹ Tiến độ',deckInfo:'{n} từ, đã thuộc {k}.',studyDeck:'Học bộ này',deckNote:'Chạm vào từ để nghe. Muốn sửa từ, sửa trong Google Sheet rồi bấm đồng bộ. Pinyin do web tự tạo; nếu từ nào bị sai, thêm cột “Pinyin” vào Sheet và gõ đúng cho riêng từ đó. Năm chấm xanh là mức ghi nhớ của từ.',
+ notLinked:'Chưa nối Google Sheet',neverSynced:'Chưa đồng bộ lần nào',lastSync:'Đồng bộ lần cuối: {t}',syncing:'Đang đồng bộ…',guestLine:'Chế độ khách: tiến độ không được lưu',
+ codeSub:'Nhập mã để vào',enter:'Vào',goBack:'Quay lại',codeErr:'Mã chưa đúng, thử lại nhé.',
+ ok:'Thuộc',no:'Chưa thuộc',flip:'Chạm để lật',undo:'Hoàn tác',cardHint:'Quẹt phải nếu đã thuộc, quẹt trái nếu chưa thuộc',
+ timeUp10:'Hết 10 giây.',notQuite:'Chưa đúng.',answer:'Đáp án:',next:'Câu tiếp',
+ mistakes:'Nối sai: {n}',secLeft:'Còn {s} giây',matchHint:'Chạm một chữ Hán rồi chạm nghĩa tương ứng. Trung bình 10 giây phải nối được một cặp, không là thua.',
+ lostTitle:'Hết giờ!',lostText:'Bạn nối được {k}/{n} từ. Trung bình mỗi 10 giây phải nối được một cặp.',playAgain:'Chơi lại',
+ doneTitle:'Xong lượt học',doneFirst:'{f}/{t} từ đúng ngay lần đầu',doneFirstM:'{f}/{t} từ nối đúng ngay',doneRedo:', {n} từ cần học lại',doneTime:'. Thời gian {t}.',tricky:'Từ khó',again:'Học lại {n} từ này',home:'Về trang chính',
+ tReview:'Ôn hôm nay',tMix:'Trộn {n} bộ',tHard:'Từ hay quên',tRedo:'Học lại từ chưa thuộc',
+ noWords:'Không có từ nào để học',needTwo:'Cần ít nhất 2 từ để làm trắc nghiệm',synced:'Đã đồng bộ {n} bộ từ',sheetEmpty:'Google Sheet chưa có bộ từ nào',
+ errClaude:'Bản xem thử trên Claude không kết nối được ra ngoài. Đồng bộ sẽ chạy khi web nằm trên GitHub.',errNet:'Không kết nối được Google Sheet. Kiểm tra mạng hoặc link cầu nối.',errGen:'Đồng bộ lỗi: {e}',noSpeech:'Trình duyệt này không hỗ trợ đọc thành tiếng',storeFail:'Không lưu được dữ liệu trên máy này'}};
+const LANGS=[['zh','繁','繁體中文','zh-Hant'],['en','EN','English','en'],['vi','VI','Tiếng Việt','vi']];
+let lang='zh';try{const l=localStorage.getItem(LKEY);if(I18N[l])lang=l}catch(e){}
+function t(k,v){let s=(I18N[lang]&&I18N[lang][k]!==undefined)?I18N[lang][k]:I18N.vi[k];if(typeof s!=='string')return s;if(v)for(const[a,b]of Object.entries(v))s=s.split('{'+a+'}').join(b);return s}
+
 const SVG=(d,s=24)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON={spk:SVG('<path d="M4 9.5v5h3.5L12 18V6L7.5 9.5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',22),x:SVG('<path d="M6 6l12 12M18 6L6 18"/>'),left:SVG('<path d="M19 12H5M11 6l-6 6 6 6"/>',28),check:SVG('<path d="M5 12.5l4.5 4.5L19 7"/>',28),undo:SVG('<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',20)};
 
 /* ---------- state ---------- */
-function blank(){return{v:2,decks:{},prog:{},days:[],set:{mode:'card',voice:'tw',auto:false,size:20},ui:{sel:[]},gs:{url:'',last:0},seeded:false}}
+function blank(){return{v:3,decks:{},prog:{},days:[],set:{mode:'card'},ui:{sel:[],rot:{}},gs:{url:GS_URL,last:0},seeded:false}}
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){S=blank()}
-S=Object.assign(blank(),S);S.set=Object.assign(blank().set,S.set);S.ui=Object.assign({sel:[]},S.ui);S.gs=Object.assign({url:'',last:0},S.gs);
-delete S.set.dir;delete S.set.showPy;S.set.voice='tw';S.set.auto=false;S.gs.url=GS_URL;
+S=Object.assign(blank(),S);S.set=Object.assign(blank().set,S.set);S.ui=Object.assign({sel:[],rot:{}},S.ui);S.gs=Object.assign({last:0},S.gs,{url:GS_URL});
+let mode='gate',gateStep='ask',ownerS=null;
 let saveT;
-function persist(){if(mode!=='owner')return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Không lưu được dữ liệu trên máy này')}}
+function persist(){if(mode!=='owner')return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('storeFail'))}}
 function save(){if(mode!=='owner')return;clearTimeout(saveT);saveT=setTimeout(persist,120)}
 addEventListener('pagehide',persist);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)persist()});
@@ -218,13 +289,12 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const today=()=>{const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000)};
 const strip=s=>String(s??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D');
-const isLockedName=s=>/(^|[^A-Za-z])KHOA([^A-Za-z]|$)/.test(strip(s));
 const deckKey=s=>strip(s).replace(/(^|[^A-Za-z])KHOA(?=[^A-Za-z]|$)/g,'$1').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'bo-tu';
 const fmtTime=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-const fmtDate=ms=>new Date(ms).toLocaleString('vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});
+const fmtDate=ms=>new Date(ms).toLocaleString(lang==='zh'?'zh-TW':lang==='en'?'en-GB':'vi-VN',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'});
 const vibe=n=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
 let toastT;
-function toast(m,ms=2600){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms)}
+function toast(m,ms=2600){const el=$('#toast');el.textContent=m;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),ms)}
 
 /* ---------- pinyin ---------- */
 const TW_CHAR={'期':'qí','危':'wéi','微':'wéi','企':'qì','寂':'jí','髮':'fǎ','液':'yì','垃':'lè','圾':'sè','暫':'zhàn','擁':'yǒng','究':'jiù','綜':'zòng'};
@@ -239,45 +309,35 @@ function autoPy(h){
 }
 const MARKS={a:'āáǎà',e:'ēéěè',i:'īíǐì',o:'ōóǒò',u:'ūúǔù','ü':'ǖǘǚǜ'};
 function numToMarks(str){
-  return str.replace(/([a-zü:v]+)([0-5])/gi,(m,syl,t)=>{
-    let s=syl.toLowerCase().replace(/u:|v/g,'ü');t=+t;if(!t||t===5)return s;
+  return str.replace(/([a-zü:v]+)([0-5])/gi,(m,syl,tn)=>{
+    let s=syl.toLowerCase().replace(/u:|v/g,'ü');tn=+tn;if(!tn||tn===5)return s;
     let i=s.indexOf('a');if(i<0)i=s.indexOf('e');if(i<0&&s.includes('ou'))i=s.indexOf('o');
     if(i<0)for(let k=s.length-1;k>=0;k--){if('aeiouü'.includes(s[k])){i=k;break}}
-    if(i<0)return s;return s.slice(0,i)+MARKS[s[i]][t-1]+s.slice(i+1);
+    if(i<0)return s;return s.slice(0,i)+MARKS[s[i]][tn-1]+s.slice(i+1);
   });
 }
 function normPy(p){p=String(p??'').trim().replace(/\s+/g,' ');return /\d/.test(p)?numToMarks(p):p}
 
-/* ---------- speech ---------- */
+/* ---------- speech (luôn giọng Đài Loan) ---------- */
 let voices=[];
 function loadVoices(){try{voices=speechSynthesis.getVoices()||[]}catch(e){}}
-if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=()=>{loadVoices();const n=$('#voice-note');if(n)n.textContent=voiceNote()}}
-function pickVoice(){
-  const want=S.set.voice==='tw'?['zh-tw','zh-hant','cmn-hant']:['zh-cn','zh-hans','cmn-hans'];
-  const L=v=>String(v.lang||'').toLowerCase().replace(/_/g,'-');
-  return voices.find(v=>want.some(w=>L(v).startsWith(w)))||null;
-}
-function voiceNote(){
-  if(!('speechSynthesis' in window))return'Trình duyệt này không hỗ trợ đọc thành tiếng.';
-  const v=pickVoice();const name=S.set.voice==='tw'?'tiếng Trung (Đài Loan)':'tiếng Trung (Đại lục)';
-  return v?`Đang dùng giọng ${v.name}.`:`Chưa tìm thấy giọng ${name} trên máy này, máy sẽ dùng giọng tiếng Trung mặc định. Có thể tải thêm giọng trong Cài đặt của điện thoại.`;
-}
-function say(t){
-  if(!('speechSynthesis' in window)){toast('Trình duyệt này không hỗ trợ đọc thành tiếng');return}
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=S.set.voice==='tw'?'zh-TW':'zh-CN';const v=pickVoice();if(v)u.voice=v;u.rate=.85;speechSynthesis.speak(u)}catch(e){}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function say(txt){
+  if(!('speechSynthesis' in window)){toast(t('noSpeech'));return}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='zh-TW';
+    const v=voices.find(x=>/^(zh[-_]tw|zh[-_]hant|cmn[-_]hant)/i.test(x.lang||''));if(v)u.voice=v;u.rate=.85;speechSynthesis.speak(u)}catch(e){}
 }
 
 /* ---------- data queries ---------- */
 function idx(){const m={};for(const d of Object.values(S.decks))for(const w of d.words)if(!m[w.h])m[w.h]=w;return m}
-function deckStats(d){const t=today();let known=0,due=0;for(const w of d.words){const p=S.prog[w.h];if(p&&p.b>=1)known++;if(p&&p.due<=t)due++}const n=d.words.length;return{n,known,due,pct:n?Math.round(known/n*100):0}}
-function dueWords(){const t=today(),ix=idx();return Object.keys(S.prog).filter(h=>S.prog[h].due<=t&&ix[h]).map(h=>ix[h])}
+function deckStats(d){const td=today();let known=0,due=0;for(const w of d.words){const p=S.prog[w.h];if(p&&p.b>=1)known++;if(p&&p.due<=td)due++}const n=d.words.length;return{n,known,due,pct:n?Math.round(known/n*100):0}}
+function dueWords(){const td=today(),ix=idx();return Object.keys(S.prog).filter(h=>S.prog[h].due<=td&&ix[h]).map(h=>ix[h])}
 function poolFrom(keys){const seen=new Set(),out=[];for(const k of keys){const d=S.decks[k];if(!d)continue;for(const w of d.words)if(!seen.has(w.h)){seen.add(w.h);out.push(w)}}return out}
 function pickSession(words,size){
-  const t=today();const rank=w=>{const p=S.prog[w.h];if(!p)return 1;return p.due<=t?0:2};
+  const td=today();const rank=w=>{const p=S.prog[w.h];if(!p)return 1;return p.due<=td?0:2};
   const sorted=shuffle(words).sort((a,b)=>{const ra=rank(a),rb=rank(b);if(ra!==rb)return ra-rb;return ra===2?S.prog[a.h].due-S.prog[b.h].due:0});
   return shuffle(size?sorted.slice(0,size):sorted);
 }
-const MIX_MAX=20;
 /* 1 bộ: học hết. Nhiều bộ: tối đa 20 từ, nhớ các từ đã ra để lượt sau xoay sang từ còn lại */
 function pickStart(sel){
   const pool=poolFrom(sel);
@@ -289,63 +349,60 @@ function pickStart(sel){
   else pick.forEach(w=>done.add(w.h));
   S.ui.rot[key]=[...done];save();return pick;
 }
-function markDay(){const t=today();if(!S.days.includes(t)){S.days.push(t);S.days.sort((a,b)=>a-b);if(S.days.length>400)S.days=S.days.slice(-400)}}
-function streak(){const set=new Set(S.days);let t=today();if(!set.has(t))t--;let n=0;while(set.has(t)){n++;t--}return n}
+function markDay(){const td=today();if(!S.days.includes(td)){S.days.push(td);S.days.sort((a,b)=>a-b);if(S.days.length>400)S.days=S.days.slice(-400)}}
+function streak(){const set=new Set(S.days);let d=today();if(!set.has(d))d--;let n=0;while(set.has(d)){n++;d--}return n}
 function grade(h,ok,firstTry){
-  const t=today();const p=S.prog[h]||(S.prog[h]={b:0,due:t,r:0,w:0,last:null,n:true});
-  if(ok){p.r++;if(firstTry){if(p.n||p.due<=t){p.b=Math.min(p.b+1,5);p.due=t+INT[p.b]}}else{p.b=1;p.due=t+1}}
-  else{p.w++;p.b=0;p.due=t}
-  p.n=false;p.last=t;p.t=Date.now();markDay();save();
+  const td=today();const p=S.prog[h]||(S.prog[h]={b:0,due:td,r:0,w:0,last:null,n:true});
+  if(ok){p.r++;if(firstTry){if(p.n||p.due<=td){p.b=Math.min(p.b+1,5);p.due=td+INT[p.b]}}else{p.b=1;p.due=td+1}}
+  else{p.w++;p.b=0;p.due=td}
+  p.n=false;p.last=td;p.t=Date.now();markDay();save();
 }
 
-/* ---------- parsing (Excel + Google Sheet share this) ---------- */
+/* ---------- đọc dữ liệu sheet ---------- */
 function parseRows(rows){
   let hdr=-1;
-  for(let i=0;i<Math.min(rows.length,10);i++){const t=(rows[i]||[]).map(c=>strip(c).toLowerCase());if(t.some(c=>c.includes('pinyin')||c.includes('chu han')||c.includes('han tu')||c.includes('hanzi')||c.includes('tieng viet')||c.includes('nghia'))){hdr=i;break}}
+  for(let i=0;i<Math.min(rows.length,10);i++){const r=(rows[i]||[]).map(c=>strip(c).toLowerCase());if(r.some(c=>c.includes('pinyin')||c.includes('chu han')||c.includes('han tu')||c.includes('hanzi')||c.includes('tieng viet')||c.includes('nghia'))){hdr=i;break}}
   let start=hdr+1;
   if(hdr<0){start=rows.findIndex(r=>CJK.test(String((r||[])[0]??'')));if(start<0)start=rows.length}
   let title='';
   for(let i=0;i<(hdr<0?start:hdr);i++){const cells=(rows[i]||[]).map(c=>String(c??'').trim()).filter(Boolean);if(cells.length===1&&!CJK.test(cells[0]))title=cells[0]}
   let cH=0,cP=1,cV=2;
-  if(hdr>=0){const t=(rows[hdr]||[]).map(c=>strip(c).toLowerCase());const f=(...k)=>t.findIndex(c=>k.some(x=>c.includes(x)));
+  if(hdr>=0){const r=(rows[hdr]||[]).map(c=>strip(c).toLowerCase());const f=(...k)=>r.findIndex(c=>k.some(x=>c.includes(x)));
     const a=f('chu han','han tu','hanzi'),b=f('pinyin'),c=f('tieng viet','nghia');cH=a>=0?a:0;cP=b;cV=c>=0?c:[0,1,2].find(x=>x!==cH&&x!==cP)}
   else if(!rows.slice(start).some(r=>String((r||[])[2]??'').trim())){cP=-1;cV=1}
-  const words=[],seen=new Set();let skipped=0,auto=0;
+  const words=[],seen=new Set();
   for(let i=start;i<rows.length;i++){
     const r=rows[i]||[];const h=String(r[cH]??'').replace(/\s+/g,'');const v=String(r[cV]??'').trim().replace(/\s+/g,' ');let p=cP>=0?normPy(r[cP]):'';
-    if(!h&&!v&&!p)continue;
-    if(!h||!CJK.test(h)||!v){skipped++;continue}
-    if(seen.has(h))continue;seen.add(h);
-    let isAuto=false;if(!p){p=autoPy(h);isAuto=!!p;if(p)auto++}
-    words.push({h,p,v,auto:isAuto,row:i+1});
+    if(!h||!CJK.test(h)||!v||seen.has(h))continue;seen.add(h);
+    if(!p)p=autoPy(h);
+    words.push({h,p,v});
   }
-  return{title,words,skipped,auto};
+  return{title,words};
 }
-const cleanWords=ws=>ws.map(({row,...w})=>w);
 
-/* ---------- Google Sheet sync ---------- */
+/* ---------- đồng bộ Google Sheet ---------- */
 let syncing=false;
 const inClaude=()=>!!window.claude;
 function syncErr(e){
-  if(inClaude())return'Bản xem thử trên Claude không kết nối được ra ngoài. Đồng bộ sẽ chạy khi web nằm trên GitHub.';
-  if(e&&e.name==='TypeError')return'Không kết nối được Google Sheet. Kiểm tra mạng hoặc link cầu nối.';
-  return'Đồng bộ lỗi: '+(e&&e.message||'không rõ nguyên nhân');
+  if(inClaude())return t('errClaude');
+  if(e&&e.name==='TypeError')return t('errNet');
+  return t('errGen',{e:(e&&e.message)||'?'});
 }
 async function gsGet(params){
   const u=new URL(S.gs.url);for(const[k,v]of Object.entries(params))u.searchParams.set(k,v);
-  const r=await fetch(u.toString());if(!r.ok)throw new Error('mã '+r.status);
-  const j=await r.json();if(!j.ok)throw new Error(j.error||'cầu nối trả lỗi');return j;
+  const r=await fetch(u.toString());if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'bridge');return j;
 }
 async function gsPost(body){
-  const r=await fetch(S.gs.url,{method:'POST',body:JSON.stringify(body)});if(!r.ok)throw new Error('mã '+r.status);
-  const j=await r.json();if(!j.ok)throw new Error(j.error||'cầu nối trả lỗi');return j;
+  const r=await fetch(S.gs.url,{method:'POST',body:JSON.stringify(body)});if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();if(!j.ok)throw new Error(j.error||'bridge');return j;
 }
 function mergeProg(rows){
   for(const r of rows||[]){
     const h=String(r[0]??'');if(!h)continue;
-    if(h==='__days__'){try{const d=JSON.parse(r[1]);if(Array.isArray(d)){S.days=[...new Set([...S.days,...d.map(Number)])].sort((a,b)=>a-b)}}catch(e){}continue}
-    const t=+r[6]||0;const loc=S.prog[h];
-    if(!loc||t>(loc.t||0))S.prog[h]={b:+r[1]||0,due:+r[2]||0,r:+r[3]||0,w:+r[4]||0,last:r[5]===''?null:+r[5],t,n:false};
+    if(h==='__days__'){try{const d=JSON.parse(r[1]);if(Array.isArray(d))S.days=[...new Set([...S.days,...d.map(Number)])].sort((a,b)=>a-b)}catch(e){}continue}
+    const tm=+r[6]||0;const loc=S.prog[h];
+    if(!loc||tm>(loc.t||0))S.prog[h]={b:+r[1]||0,due:+r[2]||0,r:+r[3]||0,w:+r[4]||0,last:r[5]===''?null:+r[5],t:tm,n:false};
   }
 }
 function progRows(){
@@ -353,161 +410,138 @@ function progRows(){
   rows.push(['__days__',JSON.stringify(S.days.slice(-400)),'','','','','']);
   return rows;
 }
-async function syncAll(force){
+async function syncAll(){
   if(!S.gs.url||syncing)return;syncing=true;setSyncUI(true);
   try{
-    const skip=[];
-    const j=await gsGet({action:'read',skip:JSON.stringify(skip)});
+    const j=await gsGet({action:'read',skip:'[]'});
     const names=new Set(j.sheets.map(s=>s.name));
     for(const d of Object.values(S.decks))if(d.src==='gs'&&!names.has(d.sheet))delete S.decks[d.key];
-    const pyWrites=[];let n=0;
+    let n=0;
     for(const sh of j.sheets){
       if(!sh.values)continue;
       for(const d of Object.values(S.decks))if(d.src==='gs'&&d.sheet===sh.name)delete S.decks[d.key];
       const r=parseRows(sh.values);if(!r.words.length)continue;
-      const name=(r.title||sh.name).trim();const key=deckKey(name);const isNew=!S.decks[key];
-      S.decks[key]={key,name,sheet:sh.name,src:'gs',locked:false,words:cleanWords(r.words),updated:Date.now()};
-      if(isNew&&!S.ui.sel.length)S.ui.sel.push(key);
-      n++;
+      const name=(r.title||sh.name).trim();const key=deckKey(name);
+      S.decks[key]={key,name,sheet:sh.name,src:'gs',words:r.words,updated:Date.now()};n++;
     }
-    // the sample deck is only for the preview: drop it once the Sheet brings real decks
-    if(Object.values(S.decks).some(d=>d.src==='gs'))for(const d of Object.values(S.decks))if(d.src==='seed')delete S.decks[d.key];
-    if(mode==='owner'){mergeProg(j.progress);
-    await gsPost({action:'saveProgress',rows:progRows()});}
+    if(Object.values(S.decks).some(d=>d.src==='gs'))for(const d of Object.values(S.decks))if(d.src!=='gs')delete S.decks[d.key];
+    S.ui.sel=S.ui.sel.filter(k=>S.decks[k]);if(!S.ui.sel.length&&Object.keys(S.decks).length)S.ui.sel=[Object.keys(S.decks)[0]];
+    if(mode==='owner'){mergeProg(j.progress);await gsPost({action:'saveProgress',rows:progRows()})}
     S.gs.last=Date.now();save();
-    toast(n?`Đã đồng bộ ${n} bộ từ`:'Google Sheet chưa có bộ từ nào');
+    toast(n?t('synced',{n}):t('sheetEmpty'));
   }catch(e){toast(syncErr(e),4200)}
   finally{syncing=false;setSyncUI(false);if(!sess)render()}
 }
 async function syncProgress(){
-  if(mode!=='owner')return;
-  if(!S.gs.url||syncing)return;syncing=true;
+  if(mode!=='owner'||!S.gs.url||syncing||inClaude())return;syncing=true;
   try{const j=await gsGet({action:'progress'});mergeProg(j.progress);await gsPost({action:'saveProgress',rows:progRows()});S.gs.last=Date.now();save()}
-  catch(e){}finally{syncing=false}
+  catch(e){}finally{syncing=false;if(!sess)render()}
 }
-function setSyncUI(on){const ls=$('#lastsync');if(ls&&on)ls.textContent='Đang đồng bộ…';document.querySelectorAll('[data-act=sync],[data-act=sync-all]').forEach(b=>{b.classList.toggle('sync-on',on);if(b.dataset.act==='sync'&&b.classList.contains('btn'))b.textContent=on?'Đang đồng bộ…':'Đồng bộ ngay'})}
+function setSyncUI(on){const b=$('#hdr-sync');if(b)b.classList.toggle('sync-on',on);if(on){const ls=$('#lastsync');if(ls)ls.textContent=t('syncing')}}
 
 /* ---------- views ---------- */
 let tab='learn',deckOpen=null;
 function render(){
-  document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.v===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  document.documentElement.lang=LANGS.find(l=>l[0]===lang)[3];
+  $('#hdr-lang').textContent=LANGS.find(l=>l[0]===lang)[1];
+  $('#tab-learn').textContent=t('tabLearn');$('#tab-prog').textContent=t('tabProg');
   const guest=mode==='guest';
-  $('.tabbar').hidden=mode!=='owner';$('#hdr-exit').hidden=!guest;
+  $('.tabbar').hidden=mode!=='owner';
+  const ex=$('#hdr-exit');ex.hidden=!guest;ex.textContent=t('exit');
+  document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.v===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   if(mode==='gate'){$('#hdr-sync').hidden=true;$('#lastsync').textContent='';$('#main').innerHTML=vGate();const c=$('#gate-code');if(c)setTimeout(()=>c.focus(),50);return}
   $('#hdr-sync').hidden=!S.gs.url||guest;
-  $('#lastsync').textContent=guest?'Chế độ khách: tiến độ không được lưu':!S.gs.url?'Chưa nối Google Sheet':S.gs.last?'Đồng bộ lần cuối: '+fmtDate(S.gs.last):'Chưa đồng bộ lần nào';
+  $('#lastsync').textContent=guest?t('guestLine'):!S.gs.url?t('notLinked'):S.gs.last?t('lastSync',{t:fmtDate(S.gs.last)}):t('neverSynced');
   $('#main').innerHTML=tab==='learn'?vLearn():(deckOpen&&S.decks[deckOpen]?vDeck(S.decks[deckOpen]):vProg());
 }
 function seg(act,cur,opts){return`<div class="seg" role="group">${opts.map(([k,l])=>`<button data-act="${act}" data-v="${k}" aria-pressed="${String(cur)===String(k)}">${l}</button>`).join('')}</div>`}
 function vLearn(){
-  const decks=Object.values(S.decks);const due=dueWords().length;const st=streak();const set=S.set;
+  const decks=Object.values(S.decks);const due=dueWords().length;const st=streak();
   S.ui.sel=S.ui.sel.filter(k=>S.decks[k]);
-  const n=poolFrom(S.ui.sel).length;const mix=S.ui.sel.length>1;const take=mix?Math.min(n,MIX_MAX):n;
-  return`${mode==='guest'?'<section class="panel today"><div class="today-txt">Mời bạn trải nghiệm, tuy nhiên tiến độ của bạn không được ghi lại vì đây là app sử dụng riêng của Duy Anh ạ!</div></section>':`<section class="panel today">
-    <div class="today-txt">${due?`Hôm nay có <b>${due} từ</b> đến hạn ôn.`:'Hôm nay không có từ nào đến hạn ôn.'}</div>
-    <div class="small muted">${st?`Bạn đã học ${st} ngày liên tiếp.`:'Học một lượt hôm nay để bắt đầu chuỗi ngày học.'}</div>
-    ${due?`<button class="btn primary block" data-act="start-due">Ôn ${due} từ đến hạn</button>`:''}
-  </section>`}
-  <h2>Cách học</h2>${seg('mode',set.mode,[['card','Thẻ lật'],['quiz','Trắc nghiệm'],['match','Nối từ']])}
-  <h2>Chọn bộ để học</h2>
-  ${decks.length?`<div class="panel tight">${decks.map(d=>{const s=deckStats(d);return`<label class="deckrow"><input type="checkbox" data-act="sel" data-k="${esc(d.key)}" ${S.ui.sel.includes(d.key)?'checked':''}><div class="grow"><div class="dname">${esc(d.name)} ${d.locked?'<span class="tag">Đã khóa</span>':''}</div><div class="small muted">${s.n} từ, đã thuộc ${s.pct}%</div><div class="bar"><i style="width:${s.pct}%"></i></div></div></label>`}).join('')}</div>
-  <div class="rowbtns"><button class="btn" data-act="rand">Chọn ngẫu nhiên</button><button class="btn" data-act="selall">${S.ui.sel.length===decks.length?'Bỏ chọn hết':'Chọn tất cả'}</button></div>`
-  :`<div class="panel empty">Chưa có bộ từ nào. Thêm bộ từ vào Google Sheet rồi bấm nút đồng bộ ở góc trên.</div>`}
-  <button class="btn primary block go" data-act="start" ${n?'':'disabled'}>${n?`Bắt đầu học ${take} từ`:'Chọn ít nhất một bộ để bắt đầu'}</button>
-  <p class="hint">${!n?'':mix?(n>MIX_MAX?`Trộn ${S.ui.sel.length} bộ (${n} từ): mỗi lượt tối đa ${MIX_MAX} từ, lượt sau ưu tiên các từ chưa học để ôn đều.`:`Trộn ${S.ui.sel.length} bộ, học hết ${n} từ.`):'Học hết các từ trong bộ.'}</p>`;
+  const n=poolFrom(S.ui.sel).length;const mix=S.ui.sel.length>1;const take=mix?Math.min(n,MIX_MAX):n;const d=S.ui.sel.length;
+  const top=mode==='guest'?`<section class="panel today"><div class="today-txt">${t('guestMsg')}</div></section>`
+    :`<section class="panel today"><div class="today-txt">${due?t('dueSome',{n:due}):t('dueNone')}</div><div class="small muted">${st?t('streak',{n:st}):t('streak0')}</div>${due?`<button class="btn primary block" data-act="start-due">${t('reviewBtn',{n:due})}</button>`:''}</section>`;
+  return`${top}
+  <h2>${t('mode')}</h2>${seg('mode',S.set.mode,[['card',t('mCard')],['quiz',t('mQuiz')],['match',t('mMatch')]])}
+  <h2>${t('chooseDecks')}</h2>
+  ${decks.length?`<div class="panel tight">${decks.map(dk=>{const s=deckStats(dk);return`<label class="deckrow"><input type="checkbox" data-act="sel" data-k="${esc(dk.key)}" ${S.ui.sel.includes(dk.key)?'checked':''}><div class="grow"><div class="dname">${esc(dk.name)}</div><div class="small muted">${t('deckMeta',{n:s.n,p:s.pct})}</div><div class="bar"><i style="width:${s.pct}%"></i></div></div></label>`}).join('')}</div>
+  <div class="rowbtns"><button class="btn" data-act="rand">${t('rand')}</button><button class="btn" data-act="selall">${S.ui.sel.length===decks.length?t('selNone'):t('selAll')}</button></div>`
+  :`<div class="panel empty">${t('noDecks')}</div>`}
+  <button class="btn primary block go" data-act="start" ${n?'':'disabled'}>${n?t('start',{n:take}):t('startNone')}</button>
+  <p class="hint">${!n?'':mix?(n>MIX_MAX?t('hintMixMax',{d,n,m:MIX_MAX}):t('hintMixAll',{d,n})):t('hintSingle')}</p>`;
 }
 function vProg(){
   const ix=idx();const all=Object.keys(ix);const c=[0,0,0,0,0,0];let fresh=0;
   for(const h of all){const p=S.prog[h];if(!p)fresh++;else c[p.b]++}
-  const max=Math.max(1,fresh,...c);
-  const rows=[['Chưa học',fresh,'#CFC6B3'],...BOX_LABEL.map((l,i)=>[l,c[i],i===0?'var(--amber)':'var(--jade)'])];
+  const max=Math.max(1,fresh,...c);const L=t('levelNames');
+  const rows=[[L[0],fresh,'#CFC6B3'],...c.map((n,i)=>[L[i+1],n,i===0?'var(--amber)':'var(--jade)'])];
   const hard=Object.entries(S.prog).filter(([h,p])=>ix[h]&&p.w>=2).sort((a,b)=>b[1].w-a[1].w).slice(0,12);
-  return`<div class="stats"><div><b>${all.length}</b><span>từ trong các bộ</span></div><div><b>${c.slice(1).reduce((a,b)=>a+b,0)}</b><span>từ đang nhớ</span></div><div><b>${streak()}</b><span>ngày học liên tiếp</span></div></div>
-  <h2>Từ theo mức ghi nhớ</h2><div class="panel">${rows.map(([l,n,col],i)=>`<div class="hrow"><span>${l}</span><span class="hb"><i style="width:${n/max*100}%;background:${col};opacity:${i<2?1:.4+i*.1}"></i></span><span class="hn">${n}</span></div>`).join('')}</div>
-  <h2>Từ hay quên</h2>${hard.length?`<div class="panel tight">${hard.map(([h,p])=>`<div class="wrow static"><span class="whz">${esc(h)}</span><span class="grow"><span class="wpy">${esc(ix[h].p)}</span><span class="wv">${esc(ix[h].v)}</span></span><span class="small muted">sai ${p.w} lần</span></div>`).join('')}</div><div class="rowbtns"><button class="btn" data-act="start-hard">Ôn các từ này bằng trắc nghiệm</button></div>`:'<p class="small muted">Chưa có từ nào sai từ 2 lần trở lên.</p>'}
-  <h2>Từng bộ từ</h2>${deckList()}`;
-}
-function gsBox(){
-  return S.gs.url?`<div class="panel gsbox"><p><b>Đã nối Google Sheet.</b></p><p class="small muted">${S.gs.last?'Đồng bộ lần cuối lúc '+fmtDate(S.gs.last)+'.':'Chưa đồng bộ lần nào.'} Web tự đồng bộ mỗi khi mở và sau mỗi lượt học. Cần đồng bộ ngay thì bấm nút xoay vòng ở góc trên.</p><button class="link" data-act="unlink">Ngắt kết nối</button></div>`
-    :`<div class="panel gsbox"><p><b>Nối Google Sheet</b></p><p class="small muted">Dán link cầu nối Apps Script (bắt đầu bằng https://script.google.com/macros/s/ và kết thúc bằng /exec).</p>
-      <input class="field" id="gs-url" placeholder="https://script.google.com/macros/s/…/exec" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false"><div class="rowbtns"><button class="btn primary" data-act="link">Kết nối</button></div></div>`;
-}
-function deckList(){
   const decks=Object.values(S.decks);
-  return decks.length?decks.map(d=>{const st=deckStats(d);return`<button class="deckcard" data-act="open" data-k="${esc(d.key)}"><div class="dname">${esc(d.name)}</div><div class="small muted">${st.n} từ, đã thuộc ${st.known}/${st.n}${st.due?`, ${st.due} từ đến hạn ôn`:''}</div><div class="bar"><i style="width:${st.pct}%"></i></div></button>`}).join(''):'<p class="small muted">Chưa có bộ từ nào.</p>';
+  return`<div class="stats"><div><b>${all.length}</b><span>${t('statWords')}</span></div><div><b>${c.slice(1).reduce((a,b)=>a+b,0)}</b><span>${t('statMem')}</span></div><div><b>${streak()}</b><span>${t('statStreak')}</span></div></div>
+  <h2>${t('levels')}</h2><div class="panel">${rows.map(([l,n,col],i)=>`<div class="hrow"><span>${l}</span><span class="hb"><i style="width:${n/max*100}%;background:${col};opacity:${i<2?1:.4+i*.1}"></i></span><span class="hn">${n}</span></div>`).join('')}</div>
+  <h2>${t('hard')}</h2>${hard.length?`<div class="panel tight">${hard.map(([h,p])=>`<div class="wrow static"><span class="whz">${esc(h)}</span><span class="grow"><span class="wpy">${esc(ix[h].p)}</span><span class="wv">${esc(ix[h].v)}</span></span><span class="small muted">${t('wrongN',{n:p.w})}</span></div>`).join('')}</div><div class="rowbtns"><button class="btn" data-act="start-hard">${t('hardBtn')}</button></div>`:`<p class="small muted">${t('hardNone')}</p>`}
+  <h2>${t('decksH')}</h2>${decks.map(dk=>{const s=deckStats(dk);return`<button class="deckcard" data-act="open" data-k="${esc(dk.key)}"><div class="dname">${esc(dk.name)}</div><div class="small muted">${t('deckCard',{n:s.n,k:s.known})}${s.due?t('deckDue',{d:s.due}):''}</div><div class="bar"><i style="width:${s.pct}%"></i></div></button>`}).join('')}`;
 }
 function vDeck(d){
-  const s=deckStats(d);const gs=d.src==='gs';
-  return`<button class="back" data-act="close-deck">‹ Tiến độ</button>
+  const s=deckStats(d);
+  return`<button class="back" data-act="close-deck">${t('back')}</button>
   <h1>${esc(d.name)}</h1>
-  <div class="small muted">${s.n} từ, đã thuộc ${s.known}.${d.locked?' Bộ đã khóa: đồng bộ thường sẽ không tải lại.':''}</div>
-  <div class="rowbtns"><button class="btn primary" data-act="study-deck" data-k="${esc(d.key)}">Học bộ này</button>${gs?'':`<button class="btn danger" data-act="del-deck" data-k="${esc(d.key)}">Xoá bộ</button>`}</div>
-  <div class="panel tight">${d.words.map((w,i)=>{const p=S.prog[w.h];const b=p?p.b:-1;return`<button class="wrow" data-act="${gs?'say':'edit'}" data-t="${esc(w.h)}" data-k="${esc(d.key)}" data-i="${i}"><span class="whz">${esc(w.h)}</span><span class="grow"><span class="wpy">${esc(w.p||'—')}</span><span class="wv">${esc(w.v)}</span></span><span class="dots" title="${b<0?'Chưa học':BOX_LABEL[b]}">${[1,2,3,4,5].map(k=>`<i class="${b>=k?'on':''}"></i>`).join('')}</span></button>`}).join('')}</div>
-  <p class="small muted">${gs?'Chạm vào từ để nghe. Muốn sửa từ, sửa trong Google Sheet rồi bấm đồng bộ. Pinyin do web tự tạo; nếu từ nào bị sai, thêm cột “Pinyin” vào Sheet và gõ đúng cho riêng từ đó.':'Chạm vào từ để nghe, sửa pinyin hoặc nghĩa.'} Năm chấm xanh là mức ghi nhớ của từ.</p>`;
+  <div class="small muted">${t('deckInfo',{n:s.n,k:s.known})}</div>
+  <div class="rowbtns"><button class="btn primary" data-act="study-deck" data-k="${esc(d.key)}">${t('studyDeck')}</button></div>
+  <div class="panel tight">${d.words.map(w=>{const p=S.prog[w.h];const b=p?p.b:-1;return`<button class="wrow" data-act="say" data-t="${esc(w.h)}"><span class="whz">${esc(w.h)}</span><span class="grow"><span class="wpy">${esc(w.p||'—')}</span><span class="wv">${esc(w.v)}</span></span><span class="dots">${[1,2,3,4,5].map(k=>`<i class="${b>=k?'on':''}"></i>`).join('')}</span></button>`}).join('')}</div>
+  <p class="small muted">${t('deckNote')}</p>`;
 }
 
-/* ---------- bottom sheet ---------- */
+/* ---------- cửa vào: chủ app hay khách ---------- */
+function vGate(){
+  if(gateStep==='ask')return`<div class="gate"><div class="gate-q">你是維英嗎？</div><div class="rowbtns"><button class="btn primary" data-act="gate-yes">是</button><button class="btn" data-act="gate-no">不是</button></div></div>`;
+  return`<div class="gate"><div class="gate-q">請輸入密碼</div>${t('codeSub')?`<div class="small muted">${t('codeSub')}</div>`:''}
+  <input class="field code" id="gate-code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" aria-label="code">
+  <div class="small warn" id="gate-err" role="alert"></div>
+  <div class="rowbtns"><button class="btn primary ui" data-act="gate-check">${t('enter')}</button><button class="btn ui" data-act="gate-back">${t('goBack')}</button></div></div>`;
+}
+async function sha256(x){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x));return[...new Uint8Array(b)].map(y=>y.toString(16).padStart(2,'0')).join('')}
+let checking=false;
+async function checkCode(){
+  const el=$('#gate-code');if(!el||checking)return;checking=true;
+  let ok=false;try{ok=await sha256(el.value.trim())===CODE_HASH}catch(e){}
+  checking=false;
+  if(ok){enterOwner();return}
+  vibe([20,40,20]);el.value='';el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');$('#gate-err').textContent=t('codeErr');el.focus();
+}
+function prepState(st){
+  if(!st.seeded){st.seeded=true;if(!Object.keys(st.decks).length){const k=deckKey(SEED.name);st.decks[k]={key:k,name:SEED.name,src:'seed',words:SEED.words.map(([h,v])=>({h,p:'',v})),updated:Date.now()};st.ui.sel=[k]}}
+  if(window.pinyinPro){for(const d of Object.values(st.decks))for(const w of d.words)if(!w.p)w.p=autoPy(w.h)}
+}
+function enterOwner(){mode='owner';tab='learn';deckOpen=null;prepState(S);save();render();if(S.gs.url&&!inClaude())syncAll()}
+function enterGuest(){
+  ownerS=S;const g=blank();
+  for(const d of Object.values(ownerS.decks))g.decks[d.key]={...d,words:d.words.map(w=>({...w}))};
+  g.seeded=ownerS.seeded;g.ui.sel=(ownerS.ui.sel||[]).filter(k=>g.decks[k]);
+  S=g;mode='guest';tab='learn';deckOpen=null;prepState(S);render();
+  if(S.gs.url&&!inClaude())syncAll();
+}
+function exitGuest(){
+  clearInterval(timerI);clearQ();sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');closeSheet();
+  if(ownerS)S=ownerS;ownerS=null;mode='gate';gateStep='ask';tab='learn';deckOpen=null;render();
+}
+
+/* ---------- bảng chọn ngôn ngữ ---------- */
 function openSheet(html){const s=$('#sheet');s.innerHTML=`<div class="sheetin" role="dialog" aria-modal="true">${html}</div>`;s.hidden=false}
 function closeSheet(){const s=$('#sheet');s.hidden=true;s.innerHTML=''}
-function confirmSheet(msg,ok,act,k=''){openSheet(`<p>${msg}</p><div class="rowbtns"><button class="btn primary" data-act="${act}" data-k="${esc(k)}">${ok}</button><button class="btn" data-act="close-sheet">Huỷ</button></div>`)}
-let editAuto=null;
-function openEdit(k,i){
-  const w=S.decks[k].words[i];editAuto=null;
-  openSheet(`<div class="ehz">${esc(w.h)}<button class="icon" data-act="say" data-t="${esc(w.h)}" aria-label="Nghe phát âm">${ICON.spk}</button></div>
-  <label class="lbl" for="e-py">Pinyin</label><input class="field py-in" id="e-py" value="${esc(w.p)}" autocomplete="off" autocapitalize="off">
-  <button class="link" data-act="regen" data-k="${esc(k)}" data-i="${i}">Tạo lại pinyin tự động</button>
-  <label class="lbl" for="e-v">Nghĩa tiếng Việt</label><input class="field" id="e-v" value="${esc(w.v)}" autocomplete="off">
-  <div class="rowbtns"><button class="btn primary" data-act="save-edit" data-k="${esc(k)}" data-i="${i}">Lưu</button><button class="btn" data-act="close-sheet">Huỷ</button></div>
-  <button class="link" data-act="reset-word" data-k="${esc(w.h)}">Học lại từ này từ đầu</button>`);
-}
+function openLang(){openSheet(`<h2 class="sh">${t('lang')}</h2>${LANGS.map(([k,,name])=>`<button class="opt ${k===lang?'right':''}" data-act="set-lang" data-v="${k}">${name}</button>`).join('')}`)}
 
-/* ---------- Excel import ---------- */
-let pendingImport=null;
-async function handleImport(file){
-  if(!window.XLSX){toast('Chưa tải được thư viện đọc Excel. Kiểm tra mạng rồi thử lại.');return}
-  try{
-    const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-    const base=file.name.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').trim();
-    const decks=[];
-    for(const sn of wb.SheetNames){
-      if(sn.trim().startsWith('_'))continue;
-      const r=parseRows(XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:'',raw:false,blankrows:false}));if(!r.words.length)continue;
-      let name=r.title||sn.trim();
-      if(!r.title&&/^(sheet|trang tính)?\s*\d+$/i.test(sn.trim()))name=base+(wb.SheetNames.length>1?' - '+sn.trim():'');
-      const key=deckKey(name);const ex=S.decks[key];
-      decks.push({key,name,locked:isLockedName(sn)||isLockedName(name),words:cleanWords(r.words),skipped:r.skipped,auto:r.auto,status:ex?(ex.locked?'skip':'update'):'new'});
-    }
-    if(!decks.length){toast('Không tìm thấy từ nào. Kiểm tra lại 3 cột: chữ Hán, pinyin, nghĩa.');return}
-    pendingImport=decks;
-    const lab={new:'Bộ mới',update:'Cập nhật bộ đã có, giữ nguyên tiến độ học',skip:'Bộ đã khóa nên sẽ giữ nguyên'};
-    openSheet(`<h2 class="sh">Nhập từ file “${esc(file.name)}”</h2>
-    ${decks.map(d=>`<div class="improw"><div class="dname">${esc(d.name)}</div><div class="small muted">${d.words.length} từ${d.auto?`, ${d.auto} pinyin tự tạo`:''}${d.skipped?`, bỏ qua ${d.skipped} dòng thiếu chữ Hán hoặc nghĩa`:''}</div><div class="small ${d.status==='skip'?'warn':''}">${lab[d.status]}</div></div>`).join('')}
-    ${decks.some(d=>d.status==='skip')?'<label class="trow"><span>Vẫn nhập lại các bộ đã khóa</span><input type="checkbox" class="sw" id="force"></label>':''}
-    <div class="rowbtns"><button class="btn primary" data-act="do-import">Lưu vào web</button><button class="btn" data-act="close-sheet">Huỷ</button></div>`);
-  }catch(e){toast('Không đọc được file này. Hãy dùng file .xlsx, .xls hoặc .csv.')}
-}
-function doImport(){
-  const force=!!($('#force')&&$('#force').checked);let n=0;
-  for(const d of pendingImport||[]){
-    if(d.status==='skip'&&!force)continue;
-    const isNew=!S.decks[d.key];
-    S.decks[d.key]={key:d.key,name:d.name,locked:d.locked,src:'excel',words:d.words,updated:Date.now()};
-    if(isNew&&!S.ui.sel.includes(d.key))S.ui.sel.push(d.key);n++;
-  }
-  pendingImport=null;save();closeSheet();deckOpen=null;render();
-  toast(n?`Đã lưu ${n} bộ từ`:'Không có bộ nào thay đổi');
-}
-
-/* ---------- session ---------- */
+/* ---------- phiên học ---------- */
 let sess=null,timerI=null,qTick=null,qAuto=null,flinging=false;
 function clearQ(){clearInterval(qTick);clearTimeout(qAuto);qTick=qAuto=null}
-function startSession(words,title,mode=S.set.mode){
+function startSession(words,title,md=S.set.mode){
   words=(words||[]).filter(w=>w&&w.h&&w.v);
-  if(!words.length){toast('Không có từ nào để học');return}
-  if(mode==='match'&&words.length<2)mode='card';
-  if(mode==='quiz'&&Object.keys(idx()).length<2){toast('Cần ít nhất 2 từ để làm trắc nghiệm');return}
-  sess={mode,title,words,map:Object.fromEntries(words.map(w=>[w.h,w])),queue:words.map(w=>w.h),failed:{},done:new Set(),total:words.length,hist:[],t0:Date.now(),summary:false,q:null,mist:{}};
-  if(mode==='match'){const hs=words.map(w=>w.h);sess.mm={QL:shuffle(hs),QR:shuffle(hs),VL:Array(SLOTS).fill(null),VR:Array(SLOTS).fill(null),sel:null,matched:0,fresh:new Set()};mmFill(sess.mm)}
+  if(!words.length){toast(t('noWords'));return}
+  if(md==='match'&&words.length<2)md='card';
+  if(md==='quiz'&&Object.keys(idx()).length<2){toast(t('needTwo'));return}
+  clearInterval(timerI);clearQ();
+  sess={mode:md,title,words,map:Object.fromEntries(words.map(w=>[w.h,w])),queue:words.map(w=>w.h),failed:{},done:new Set(),total:words.length,hist:[],t0:Date.now(),summary:false,lost:false,q:null,mist:{}};
+  if(md==='match'){const hs=words.map(w=>w.h);sess.mm={QL:shuffle(hs),QR:shuffle(hs),VL:Array(SLOTS).fill(null),VR:Array(SLOTS).fill(null),sel:null,matched:0,fresh:new Set(),deadline:Date.now()+MATCH_SEC};mmFill(sess.mm)}
   closeSheet();$('#session').hidden=false;document.body.classList.add('lock');renderSession();
 }
 function endSession(){clearInterval(timerI);clearQ();const had=!!sess;sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');render();if(had)syncProgress()}
@@ -516,22 +550,22 @@ function renderSession(){
   const s=sess;if(!s)return;
   const isM=s.mode==='match';const done=isM?s.mm.matched:s.done.size;const tot=s.total;
   const body=s.summary?vSummary():s.mode==='card'?vCard():s.mode==='quiz'?vQuiz():vMatch();
-  $('#session').innerHTML=`<div class="shead"><button class="icon" data-act="quit" aria-label="Thoát">${ICON.x}</button><div class="stitle">${esc(s.title)}</div><div class="scount">${done} / ${tot}</div></div><div class="sprog"><i style="width:${tot?done/tot*100:0}%"></i></div><div class="sbody">${body}</div>`;
+  $('#session').innerHTML=`<div class="shead"><button class="icon" data-act="quit" aria-label="close">${ICON.x}</button><div class="stitle">${esc(s.title)}</div><div class="scount">${done} / ${tot}</div></div><div class="sprog"><i style="width:${tot?done/tot*100:0}%"></i></div><div class="sbody">${body}</div>`;
   if(s.summary)return;
   if(s.mode==='card')bindCard();
   if(s.mode==='quiz')startQTimer();
-  if(isM){s.mm.fresh.clear();startTimer()}
+  if(isM){s.mm.fresh.clear();startMatchTimer()}
 }
-/* card: front = chữ Hán, back = chữ Hán + pinyin + nghĩa */
+/* thẻ lật: mặt trước chữ Hán, mặt sau chữ Hán + pinyin + nghĩa */
 function vCard(){
   const s=sess;const w=s.map[s.queue[0]];const cls=[...w.h].length>3?'hz long':'hz';
-  return`<div class="stage">${s.queue.length>1?'<div class="peek"></div>':''}<div class="card" id="card" tabindex="0" aria-label="Thẻ từ, chạm để lật">
-    <span class="stamp ok">Thuộc</span><span class="stamp no">Chưa thuộc</span>
-    <div class="flip"><div class="face front"><div class="${cls}">${esc(w.h)}</div><span class="fliphint">Chạm để lật</span></div>
+  return`<div class="stage">${s.queue.length>1?'<div class="peek"></div>':''}<div class="card" id="card" tabindex="0">
+    <span class="stamp ok">${t('ok')}</span><span class="stamp no">${t('no')}</span>
+    <div class="flip"><div class="face front"><div class="${cls}">${esc(w.h)}</div><span class="fliphint">${t('flip')}</span></div>
     <div class="face back"><div class="hz sm">${esc(w.h)}</div>${w.p?`<div class="py">${esc(w.p)}</div>`:''}<div class="mean back-mean">${esc(w.v)}</div></div></div>
-    <button class="icon spk" data-act="say" data-t="${esc(w.h)}" aria-label="Nghe phát âm">${ICON.spk}</button></div></div>
-  <div class="acts"><div class="act"><button class="round no" data-act="left" aria-label="Chưa thuộc">${ICON.left}</button>Chưa thuộc</div><div class="act"><button class="round sm" data-act="undo" aria-label="Hoàn tác" ${s.hist.length?'':'disabled'}>${ICON.undo}</button>Hoàn tác</div><div class="act"><button class="round ok" data-act="right" aria-label="Đã thuộc">${ICON.check}</button>Thuộc</div></div>
-  <p class="hint">Quẹt phải nếu đã thuộc, quẹt trái nếu chưa thuộc</p>`;
+    <button class="icon spk" data-act="say" data-t="${esc(w.h)}" aria-label="play">${ICON.spk}</button></div></div>
+  <div class="acts"><div class="act"><button class="round no" data-act="left" aria-label="${t('no')}">${ICON.left}</button>${t('no')}</div><div class="act"><button class="round sm" data-act="undo" aria-label="${t('undo')}" ${s.hist.length?'':'disabled'}>${ICON.undo}</button>${t('undo')}</div><div class="act"><button class="round ok" data-act="right" aria-label="${t('ok')}">${ICON.check}</button>${t('ok')}</div></div>
+  <p class="hint">${t('cardHint')}</p>`;
 }
 function bindCard(){
   const card=$('#card');if(!card)return;
@@ -542,7 +576,6 @@ function bindCard(){
   card.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==pid)return;dx=e.clientX-sx;card.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;const r=Math.min(Math.abs(dx)/90,1);ok.style.opacity=dx>0?r:0;no.style.opacity=dx<0?r:0});
   card.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==pid)return;drag=false;const a=Math.abs(dx);if(a>90)fling(dx>0);else{reset();if(a<8&&Date.now()-t0<450)flip()}});
   card.addEventListener('pointercancel',()=>{drag=false;reset()});
-  if(S.set.auto)say(sess.queue[0]);
 }
 function flip(){const c=$('#card');if(c)c.classList.toggle('flipped')}
 function fling(right){
@@ -560,40 +593,40 @@ function answer(ok){
   s.q=null;if(!s.queue.length)finish();renderSession();
 }
 function undo(){const s=sess;const x=s&&s.hist.pop();if(!x)return;if(x.prev)S.prog[x.h]=x.prev;else delete S.prog[x.h];s.queue=x.queue;s.done=new Set(x.done);s.failed=x.failed;s.summary=false;s.q=null;save();renderSession()}
-/* quiz: random direction, 10 s, options drawn from every deck */
+/* trắc nghiệm: đảo chiều ngẫu nhiên, 10 giây, đáp án nhiễu lấy từ mọi bộ */
 function buildQuiz(w){
   const kind=Math.random()<.5?'hv':'vh';const key=kind==='hv'?'v':'h';const norm=x=>String(x[key]||'').trim().toLowerCase();
   const all=Object.values(idx());const others=shuffle(all.filter(x=>!sess.map[x.h]));const inside=shuffle(Object.values(sess.map));
   const pool=[...others.slice(0,2),...shuffle([...others.slice(2),...inside])];
   const seen=new Set([norm(w)]);const opts=[w];
   for(const x of pool){if(opts.length>=4)break;const k=norm(x);if(!k||seen.has(k))continue;seen.add(k);opts.push(x)}
-  return{h:w.h,kind,opts:shuffle(opts),picked:null,timeout:false,deadline:0,spoken:false};
+  return{h:w.h,kind,opts:shuffle(opts),picked:null,timeout:false,deadline:0};
 }
 function vQuiz(){
   const s=sess;const w=s.map[s.queue[0]];if(!s.q||s.q.h!==w.h)s.q=buildQuiz(w);const q=s.q;const hv=q.kind==='hv';
   const reveal=q.picked!==null||q.timeout;const wrong=q.timeout||(q.picked!==null&&q.opts[q.picked].h!==w.h);
   const prompt=hv?`<div class="${[...w.h].length>3?'hz long':'hz'}">${esc(w.h)}</div>`:`<div class="mean">${esc(w.v)}</div>`;
   const opt=(x,i)=>{let c='opt'+(hv?'':' hzopt');if(reveal){if(x.h===w.h)c+=' right';else if(i===q.picked)c+=' wrong'}return`<button class="${c}" data-act="pick" data-i="${i}" ${reveal?'disabled':''}>${esc(hv?x.v:x.h)}</button>`};
-  return`<div class="qcard">${prompt}${hv?`<button class="icon spk" data-act="say" data-t="${esc(w.h)}" aria-label="Nghe phát âm">${ICON.spk}</button>`:''}</div>
+  return`<div class="qcard">${prompt}${hv?`<button class="icon spk" data-act="say" data-t="${esc(w.h)}" aria-label="play">${ICON.spk}</button>`:''}</div>
   ${reveal?'':'<div class="qtimer"><i id="qbar"></i></div>'}
   <div>${q.opts.map(opt).join('')}</div>
-  ${wrong?`<div class="fb"><div class="small muted">${q.timeout?'Hết 10 giây.':'Chưa đúng.'} Đáp án:</div><div><span class="fbhz">${esc(w.h)}</span><span class="fbpy">${esc(w.p)}</span></div><div>${esc(w.v)}</div><button class="btn primary block" data-act="qnext">Câu tiếp</button></div>`:''}`;
+  ${wrong?`<div class="fb"><div class="small muted">${q.timeout?t('timeUp10'):t('notQuite')} ${t('answer')}</div><div><span class="fbhz">${esc(w.h)}</span><span class="fbpy">${esc(w.p)}</span></div><div>${esc(w.v)}</div><button class="btn primary block" data-act="qnext">${t('next')}</button></div>`:''}`;
 }
 function startQTimer(){
   const q=sess.q;if(!q)return;clearInterval(qTick);
   if(q.picked!==null||q.timeout)return;
   if(!q.deadline)q.deadline=Date.now()+QTIME;
-  if(!q.spoken){q.spoken=true;if(S.set.auto&&q.kind==='hv')say(q.h)}
   const tick=()=>{if(!sess||sess.q!==q){clearInterval(qTick);return}const left=q.deadline-Date.now();const bar=$('#qbar');if(bar)bar.style.width=Math.max(0,left/QTIME*100)+'%';
     if(left<=0){clearInterval(qTick);q.timeout=true;vibe([20,40,20]);renderSession();qAuto=setTimeout(()=>{if(sess&&sess.q===q)answer(false)},REVEAL_MS)}};
   tick();qTick=setInterval(tick,100);
 }
-/* match: 5 pairs on screen, a matched pair is replaced by new words */
+/* nối từ: 5 ô mỗi bên, luôn có ít nhất 3 cặp nối được; mỗi cặp đúng cộng thêm 10 giây, hết giờ là thua */
 function mmFill(mm){
   for(let i=0;i<SLOTS;i++)if(mm.VL[i]==null&&mm.QL.length){mm.VL[i]=mm.QL.shift();mm.fresh.add('L'+i)}
+  const visL=mm.VL.filter(Boolean);const target=Math.min(MIN_PAIRS,visL.length);
+  const common=()=>visL.filter(h=>mm.VR.includes(h)).length;
   for(let i=0;i<SLOTS;i++)if(mm.VR[i]==null&&mm.QR.length){
-    const visL=mm.VL.filter(Boolean),visR=mm.VR.filter(Boolean);
-    let j=0;if(!visL.some(h=>visR.includes(h))){const k=mm.QR.findIndex(h=>visL.includes(h));if(k>=0)j=k}
+    let j=0;if(common()<target){const k=mm.QR.findIndex(h=>visL.includes(h));if(k>=0)j=k}
     mm.VR[i]=mm.QR.splice(j,1)[0];mm.fresh.add('R'+i);
   }
 }
@@ -602,74 +635,74 @@ function vMatch(){
   const tile=(side,i)=>{const h=(side==='L'?mm.VL:mm.VR)[i];if(!h)return'<div class="tile gone"></div>';const w=s.map[h];const sel=mm.sel&&mm.sel.side===side&&mm.sel.i===i;
     return`<button class="tile ${sel?'sel':''} ${mm.fresh.has(side+i)?'fresh':''}" data-act="tile" data-side="${side}" data-i="${i}">${side==='L'?`<span class="mhz">${esc(w.h)}</span>`:esc(w.v)}</button>`};
   const ids=[...Array(SLOTS).keys()];
-  return`<div class="mtop"><span id="timer">${fmtTime(Date.now()-s.t0)}</span><span id="mist">Nối sai: ${mist}</span></div>
+  return`<div class="mtop"><span id="mleft"></span><span id="mist">${t('mistakes',{n:mist})}</span></div>
+  <div class="qtimer"><i id="mbar"></i></div>
   <div class="mgrid"><div class="mcol">${ids.map(i=>tile('L',i)).join('')}</div><div class="mcol">${ids.map(i=>tile('R',i)).join('')}</div></div>
-  <p class="hint">Chạm một chữ Hán rồi chạm nghĩa tương ứng. Cặp đúng sẽ biến mất và cặp mới hiện ra.</p>`;
+  <p class="hint">${t('matchHint')}</p>`;
 }
-function startTimer(){clearInterval(timerI);timerI=setInterval(()=>{const t=$('#timer');if(!t||!sess){clearInterval(timerI);return}t.textContent=fmtTime(Date.now()-sess.t0)},500)}
+function startMatchTimer(){
+  clearInterval(timerI);
+  const tick=()=>{const s=sess;if(!s||s.summary||s.mode!=='match'){clearInterval(timerI);return}
+    const left=s.mm.deadline-Date.now();
+    const bar=$('#mbar');if(bar){bar.style.width=Math.max(0,Math.min(1,left/MATCH_SEC))*100+'%';bar.style.background=left<4000?'var(--amber)':''}
+    const lb=$('#mleft');if(lb)lb.textContent=t('secLeft',{s:Math.max(0,Math.ceil(left/1000))});
+    if(left<=0){s.lost=true;vibe([30,60,30]);finish();renderSession()}};
+  tick();timerI=setInterval(tick,100);
+}
 let mmBusy=false;
 function tapTile(btn){
-  const s=sess,mm=s.mm;if(mmBusy)return;const side=btn.dataset.side,i=+btn.dataset.i;const h=(side==='L'?mm.VL:mm.VR)[i];if(!h)return;
-  if(!mm.sel||mm.sel.side===side){document.querySelectorAll('.tile.sel').forEach(b=>b.classList.remove('sel'));if(mm.sel&&mm.sel.side===side&&mm.sel.i===i){mm.sel=null;return}mm.sel={side,i};btn.classList.add('sel');if(side==='L'&&S.set.auto)say(h);return}
+  const s=sess,mm=s.mm;if(mmBusy||s.summary)return;const side=btn.dataset.side,i=+btn.dataset.i;const h=(side==='L'?mm.VL:mm.VR)[i];if(!h)return;
+  if(!mm.sel||mm.sel.side===side){document.querySelectorAll('.tile.sel').forEach(b=>b.classList.remove('sel'));if(mm.sel&&mm.sel.side===side&&mm.sel.i===i){mm.sel=null;return}mm.sel={side,i};btn.classList.add('sel');return}
   const other=document.querySelector('.tile.sel');const iL=side==='L'?i:mm.sel.i,iR=side==='R'?i:mm.sel.i;mm.sel=null;
   const lh=mm.VL[iL],rh=mm.VR[iR];
   const match=lh===rh||s.map[lh].v.trim().toLowerCase()===s.map[rh].v.trim().toLowerCase();
   if(match){
-    mmBusy=true;vibe(8);[btn,other].forEach(b=>{if(b){b.classList.remove('sel');b.classList.add('ok')}});
+    mmBusy=true;vibe(8);mm.deadline+=MATCH_SEC;[btn,other].forEach(b=>{if(b){b.classList.remove('sel');b.classList.add('ok')}});
     if(s.mist[lh])grade(lh,false);else grade(lh,true,true);
     mm.matched++;
-    setTimeout(()=>{mmBusy=false;if(!sess)return;mm.VL[iL]=null;mm.VR[iR]=null;mmFill(mm);if(mm.matched>=s.total)finish();renderSession()},260);
+    setTimeout(()=>{mmBusy=false;if(!sess||sess.summary)return;mm.VL[iL]=null;mm.VR[iR]=null;mmFill(mm);if(mm.matched>=s.total)finish();renderSession()},260);
   }else{
     s.mist[lh]=(s.mist[lh]||0)+1;vibe([20,40,20]);
     [btn,other].forEach(b=>{if(!b)return;b.classList.remove('sel');b.classList.add('bad');setTimeout(()=>b.classList.remove('bad'),420)});
-    const m=$('#mist');if(m)m.textContent='Nối sai: '+Object.values(s.mist).reduce((a,b)=>a+b,0);
+    const m=$('#mist');if(m)m.textContent=t('mistakes',{n:Object.values(s.mist).reduce((a,b)=>a+b,0)});
   }
 }
 function vSummary(){
-  const s=sess;const isM=s.mode==='match';const src=isM?s.mist:s.failed;
+  const s=sess;const isM=s.mode==='match';
+  if(s.lost)return`<div class="sum"><div class="sumseal" aria-hidden="true">輸</div><h1>${t('lostTitle')}</h1><p class="muted">${t('lostText',{k:s.mm.matched,n:s.total})}</p>
+    <div class="stack"><button class="btn primary block" data-act="replay">${t('playAgain')}</button><button class="btn block" data-act="quit">${t('home')}</button></div></div>`;
+  const src=isM?s.mist:s.failed;
   const failed=Object.keys(src).filter(h=>src[h]>0);const first=s.total-failed.length;
-  return`<div class="sum"><div class="sumseal" aria-hidden="true">完</div><h1>Xong lượt học</h1>
-  <p class="muted">${first}/${s.total} từ ${isM?'nối đúng ngay':'đúng ngay lần đầu'}${failed.length?`, ${failed.length} từ cần học lại`:''}. Thời gian ${fmtTime((s.tEnd||Date.now())-s.t0)}.</p>
-  ${failed.length?`<div class="panel tight">${failed.map(h=>{const w=s.map[h];const n=src[h];return`<div class="wrow static"><span class="whz">${esc(w.h)}</span><span class="grow"><span class="wpy">${esc(w.p)}</span><span class="wv">${esc(w.v)}</span></span>${n>=3?'<span class="tag">Từ khó</span>':`<span class="small muted">sai ${n}</span>`}</div>`}).join('')}</div>`:''}
-  <div class="stack">${failed.length?`<button class="btn primary block" data-act="again-failed">Học lại ${failed.length} từ này</button><button class="btn block" data-act="failed-quiz">Ôn các từ này bằng trắc nghiệm</button>`:''}<button class="btn block ${failed.length?'':'primary'}" data-act="quit">Về trang chính</button></div></div>`;
+  return`<div class="sum"><div class="sumseal" aria-hidden="true">完</div><h1>${t('doneTitle')}</h1>
+  <p class="muted">${t(isM?'doneFirstM':'doneFirst',{f:first,t:s.total})}${failed.length?t('doneRedo',{n:failed.length}):''}${t('doneTime',{t:fmtTime((s.tEnd||Date.now())-s.t0)})}</p>
+  ${failed.length?`<div class="panel tight">${failed.map(h=>{const w=s.map[h];const n=src[h];return`<div class="wrow static"><span class="whz">${esc(w.h)}</span><span class="grow"><span class="wpy">${esc(w.p)}</span><span class="wv">${esc(w.v)}</span></span>${n>=3?`<span class="tag">${t('tricky')}</span>`:`<span class="small muted">${t('wrongN',{n})}</span>`}</div>`}).join('')}</div>`:''}
+  <div class="stack">${failed.length?`<button class="btn primary block" data-act="again-failed">${t('again',{n:failed.length})}</button><button class="btn block" data-act="failed-quiz">${t('hardBtn')}</button>`:''}<button class="btn block ${failed.length?'':'primary'}" data-act="quit">${t('home')}</button></div></div>`;
 }
 
-/* ---------- events ---------- */
+/* ---------- sự kiện ---------- */
 document.addEventListener('click',e=>{
   if(e.target.id==='sheet'){closeSheet();return}
   const a=e.target.closest('[data-act]');if(!a||a.disabled)return;
   const act=a.dataset.act,k=a.dataset.k,v=a.dataset.v;
   switch(act){
+    case'lang':openLang();break;
+    case'set-lang':lang=v;try{localStorage.setItem(LKEY,v)}catch(_){}closeSheet();render();if(sess)renderSession();break;
     case'gate-yes':gateStep='code';render();break;
     case'gate-back':gateStep='ask';render();break;
     case'gate-no':enterGuest();break;
     case'gate-check':checkCode();break;
     case'gate-exit':exitGuest();break;
     case'tab':tab=v;deckOpen=null;closeSheet();render();scrollTo(0,0);break;
-    case'mode':case'voice':S.set[act]=v;save();render();break;
-    case'size':S.set.size=+v;save();render();break;
-    case'rand':{const keys=Object.keys(S.decks);if(!keys.length)break;const n=keys.length<=2?keys.length:2+Math.floor(Math.random()*Math.min(2,keys.length-2));S.ui.sel=shuffle(keys).slice(0,n);save();render();toast(`Đã chọn ngẫu nhiên ${n} bộ`);break}
+    case'mode':S.set.mode=v;save();render();break;
+    case'rand':{const keys=Object.keys(S.decks);if(!keys.length)break;const n=keys.length<=2?keys.length:2+Math.floor(Math.random()*Math.min(2,keys.length-2));S.ui.sel=shuffle(keys).slice(0,n);save();render();toast(t('randToast',{n}));break}
     case'selall':{const keys=Object.keys(S.decks);S.ui.sel=S.ui.sel.length===keys.length?[]:keys;save();render();break}
-    case'start':{const sel=S.ui.sel.filter(x=>S.decks[x]);const names=sel.map(x=>S.decks[x].name);startSession(pickStart(sel),names.length>2?`Trộn ${names.length} bộ`:names.join(' + '));break}
-    case'start-due':startSession(shuffle(dueWords()),'Ôn hôm nay');break;
-    case'start-hard':{const ix=idx();startSession(Object.entries(S.prog).filter(([h,p])=>ix[h]&&p.w>=2).sort((a,b)=>b[1].w-a[1].w).slice(0,12).map(([h])=>ix[h]),'Từ hay quên','quiz');break}
+    case'start':{const sel=S.ui.sel.filter(x=>S.decks[x]);const names=sel.map(x=>S.decks[x].name);startSession(pickStart(sel),names.length>2?t('tMix',{n:names.length}):names.join(' + '));break}
+    case'start-due':startSession(shuffle(dueWords()),t('tReview'));break;
+    case'start-hard':{const ix=idx();startSession(Object.entries(S.prog).filter(([h,p])=>ix[h]&&p.w>=2).sort((x,y)=>y[1].w-x[1].w).slice(0,12).map(([h])=>ix[h]),t('tHard'),'quiz');break}
     case'study-deck':startSession(pickSession(S.decks[k].words,0),S.decks[k].name);break;
     case'open':deckOpen=k;render();scrollTo(0,0);break;
     case'close-deck':deckOpen=null;render();break;
-    case'edit':openEdit(k,+a.dataset.i);break;
-    case'regen':{const w=S.decks[k].words[+a.dataset.i];const p=autoPy(w.h);if(!p){toast('Chưa tải được công cụ tạo pinyin');break}$('#e-py').value=p;editAuto=p;break}
-    case'save-edit':{const w=S.decks[k].words[+a.dataset.i];const p=normPy($('#e-py').value);const val=$('#e-v').value.trim();if(!val){toast('Nghĩa tiếng Việt không được để trống');break}w.auto=(p===editAuto)||(w.auto&&p===w.p);w.p=p;w.v=val;save();closeSheet();render();toast('Đã lưu');break}
-    case'reset-word':delete S.prog[k];save();closeSheet();render();toast('Từ này sẽ được học lại từ đầu');break;
-    case'del-deck':confirmSheet(`Xoá bộ “${esc(S.decks[k].name)}”? Tiến độ học của các từ vẫn được giữ.`,'Xoá bộ','del-deck-yes',k);break;
-    case'del-deck-yes':delete S.decks[k];S.ui.sel=S.ui.sel.filter(x=>x!==k);deckOpen=null;save();closeSheet();render();toast('Đã xoá bộ');break;
-    case'do-import':doImport();break;
-    case'link':{const u=($('#gs-url').value||'').trim();if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(u)){toast('Link chưa đúng. Link phải bắt đầu bằng https://script.google.com/macros/s/ và kết thúc bằng /exec',4200);break}S.gs.url=u;S.gs.last=0;save();render();syncAll(false);break}
-    case'sync':syncAll(false);break;
-    case'sync-all':syncAll(true);break;
-    case'unlink':confirmSheet('Ngắt kết nối Google Sheet trên máy này? Bộ từ và tiến độ đã tải về vẫn còn.','Ngắt kết nối','unlink-yes');break;
-    case'unlink-yes':S.gs={url:'',last:0};save();closeSheet();render();break;
-    case'wipe':confirmSheet('Xoá bộ từ và tiến độ đang lưu trên máy này? Dữ liệu trong Google Sheet vẫn còn.','Xoá trên máy này','wipe-yes');break;
-    case'wipe-yes':{const gs=S.gs;S=blank();S.seeded=true;S.gs=gs;persist();closeSheet();deckOpen=null;render();toast('Đã xoá dữ liệu trên máy này');break}
+    case'sync':syncAll();break;
     case'close-sheet':closeSheet();break;
     case'say':e.stopPropagation();say(a.dataset.t);break;
     case'quit':endSession();break;
@@ -677,18 +710,17 @@ document.addEventListener('click',e=>{
     case'right':fling(true);break;
     case'undo':undo();break;
     case'pick':{const q=sess&&sess.q;if(!q||q.picked!==null||q.timeout)break;clearQ();q.picked=+a.dataset.i;const w=sess.map[sess.queue[0]];const ok=q.opts[q.picked].h===w.h;renderSession();
-      if(ok){vibe(10);if(S.set.auto)say(w.h);qAuto=setTimeout(()=>{if(sess&&sess.q===q)answer(true)},450)}
+      if(ok){vibe(10);qAuto=setTimeout(()=>{if(sess&&sess.q===q)answer(true)},450)}
       else{vibe([20,40,20]);qAuto=setTimeout(()=>{if(sess&&sess.q===q)answer(false)},REVEAL_MS)}break}
     case'qnext':answer(false);break;
     case'tile':tapTile(a);break;
-    case'again-failed':case'failed-quiz':{const s=sess;const src=s.mode==='match'?s.mist:s.failed;const ws=Object.keys(src).filter(h=>src[h]>0).map(h=>s.map[h]);startSession(shuffle(ws),'Học lại từ chưa thuộc',act==='failed-quiz'?'quiz':s.mode);break}
+    case'replay':{const s=sess;startSession(shuffle(s.words),s.title,'match');break}
+    case'again-failed':case'failed-quiz':{const s=sess;const src=s.mode==='match'?s.mist:s.failed;const ws=Object.keys(src).filter(h=>src[h]>0).map(h=>s.map[h]);startSession(shuffle(ws),t('tRedo'),act==='failed-quiz'?'quiz':s.mode);break}
   }
 });
 document.addEventListener('change',e=>{
-  const a=e.target.closest('[data-act]');if(!a)return;const act=a.dataset.act;
-  if(act==='sel'){const k=a.dataset.k;S.ui.sel=a.checked?[...new Set([...S.ui.sel,k])]:S.ui.sel.filter(x=>x!==k);save();render()}
-  else if(act==='auto'){S.set.auto=a.checked;save()}
-  else if(act==='import'&&a.files[0]){handleImport(a.files[0]);a.value=''}
+  const a=e.target.closest('[data-act]');if(!a)return;
+  if(a.dataset.act==='sel'){const k=a.dataset.k;S.ui.sel=a.checked?[...new Set([...S.ui.sel,k])]:S.ui.sel.filter(x=>x!==k);save();render()}
 });
 document.addEventListener('input',e=>{if(e.target.id==='gate-code'){e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);$('#gate-err').textContent='';if(e.target.value.length===6)checkCode()}});
 document.addEventListener('keydown',e=>{
@@ -703,58 +735,7 @@ document.addEventListener('keydown',e=>{
   }else if(sess.mode==='quiz'&&/^[1-4]$/.test(e.key)){const b=document.querySelectorAll('.opt')[+e.key-1];if(b)b.click()}
 });
 
-/* ---------- boot ---------- */
-/* ---------- gate: owner or guest ---------- */
-const CODE_HASH='e78f04d78770726a7256ede9d77e9757e20cd890927d4d123670ce41e6f8af3a';
-let mode='gate',gateStep='ask',ownerS=null;
-function vGate(){
-  if(gateStep==='ask')return`<div class="gate"><div class="gate-q">你是維英嗎？</div><div class="rowbtns"><button class="btn primary" data-act="gate-yes">是</button><button class="btn" data-act="gate-no">不是</button></div></div>`;
-  return`<div class="gate"><div class="gate-q">請輸入密碼</div><div class="small muted">Nhập mã để vào</div>
-  <input class="field code" id="gate-code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" aria-label="Mã vào">
-  <div class="small warn" id="gate-err" role="alert"></div>
-  <div class="rowbtns"><button class="btn primary ui" data-act="gate-check">Vào</button><button class="btn ui" data-act="gate-back">Quay lại</button></div></div>`;
-}
-async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-let checking=false;
-async function checkCode(){
-  const el=$('#gate-code');if(!el||checking)return;checking=true;
-  let ok=false;try{ok=await sha256(el.value.trim())===CODE_HASH}catch(e){}
-  checking=false;
-  if(ok){enterOwner();return}
-  vibe([20,40,20]);el.value='';el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');$('#gate-err').textContent='Mã chưa đúng, thử lại nhé.';el.focus();
-}
-function prepState(st){
-  if(!st.seeded){st.seeded=true;if(!Object.keys(st.decks).length){const k=deckKey(SEED.name);st.decks[k]={key:k,name:SEED.name,locked:false,src:'seed',words:SEED.words.map(([h,v])=>({h,p:'',v,auto:false})),updated:Date.now()};st.ui.sel=[k]}}
-  for(const d of Object.values(st.decks))if(!d.src)d.src=d.key===deckKey(SEED.name)?'seed':'excel';
-  if(window.pinyinPro){for(const d of Object.values(st.decks))for(const w of d.words)if(!w.p){const p=autoPy(w.h);if(p){w.p=p;w.auto=true}}}
-}
-function enterOwner(){
-  mode='owner';tab='learn';deckOpen=null;prepState(S);save();render();
-  if(S.gs.url&&!inClaude())syncAll(false);
-}
-function enterGuest(){
-  ownerS=S;const g=blank();g.gs={url:GS_URL,last:0};
-  for(const d of Object.values(ownerS.decks))g.decks[d.key]={...d,words:d.words.map(w=>({...w}))};
-  g.seeded=ownerS.seeded;g.ui.sel=(ownerS.ui.sel||[]).filter(k=>g.decks[k]);
-  S=g;mode='guest';tab='learn';deckOpen=null;prepState(S);render();
-  if(S.gs.url&&!inClaude())syncAll(false);
-}
-function exitGuest(){
-  clearInterval(timerI);clearQ();sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');closeSheet();
-  if(ownerS)S=ownerS;ownerS=null;mode='gate';gateStep='ask';tab='learn';deckOpen=null;render();
-}
-function boot(){
-  initLibs();render();
-}
-function oldBoot(){
-  initLibs();
-  if(!S.seeded){S.seeded=true;if(!Object.keys(S.decks).length){const k=deckKey(SEED.name);S.decks[k]={key:k,name:SEED.name,locked:false,src:'seed',words:SEED.words.map(([h,v])=>({h,p:'',v,auto:false})),updated:Date.now()};S.ui.sel=[k]}}
-  for(const d of Object.values(S.decks))if(!d.src)d.src=d.key===deckKey(SEED.name)?'seed':'excel';
-  if(window.pinyinPro){for(const d of Object.values(S.decks))for(const w of d.words)if(!w.p){const p=autoPy(w.h);if(p){w.p=p;w.auto=true}}}
-  save();render();
-  if(S.gs.url&&!inClaude())syncAll(false);
-}
-boot();
+initLibs();render();
 </script>
 </body>
 </html>

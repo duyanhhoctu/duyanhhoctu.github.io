@@ -89,29 +89,35 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 .sprog{height:3px;background:var(--line);border-radius:2px;max-width:520px;width:100%;margin:8px auto 0}.sprog i{display:block;height:100%;background:var(--seal);border-radius:2px;transition:width .3s}
 .sbody{flex:1;display:flex;flex-direction:column;max-width:520px;width:100%;margin:0 auto;min-height:0;overflow-y:auto}
 .icon{border:0;background:none;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;cursor:pointer;color:var(--ink2);flex:none}
-.stage{position:relative;flex:1;min-height:280px;margin:16px 4px 12px}
+.stage{position:relative;flex:1;min-height:360px;margin:16px 4px 12px}
 .peek{position:absolute;inset:12px 8px -8px;background:var(--card);border:1px solid var(--line);border-radius:22px;transform:rotate(-1.6deg)}
+.peek.p2{inset:20px 14px -14px;transform:rotate(1.4deg);opacity:.7}
 .card{position:absolute;inset:0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;perspective:1400px}
-.flip{position:absolute;inset:0;transition:transform .42s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d}
-.card.flipped .flip{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 2px 0 #E9E1D0,0 12px 28px rgba(80,60,30,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 22px;text-align:center}
-.face.back{transform:rotateY(180deg)}
-.fliphint{position:absolute;bottom:18px;left:0;right:0;font-size:12px;color:var(--ink3)}
-.card .spk{position:absolute;right:10px;bottom:8px;z-index:3}
-.hz{font-family:var(--hz);font-weight:500;font-size:clamp(58px,19vw,88px);line-height:1.15;letter-spacing:.03em}
+.face{inset:0;justify-content:stretch;align-items:stretch;padding:0;overflow:hidden}
+.ctop{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:28px 22px 16px}
+.crev{border-top:1px dashed var(--line);margin:0 20px;padding:14px 2px 20px;display:flex;flex-direction:column;gap:4px;align-items:center;flex:none}
+.crev>*{filter:blur(8px);transition:filter .12s}
+.card.shown .crev>*{filter:none}
+.crev .py{margin-top:0;font-size:19px}
+.crev .mean{font-size:clamp(19px,5.6vw,24px)}
+.note{margin-top:8px;width:100%;box-sizing:border-box;text-align:left;font-size:14px;line-height:1.55;background:var(--amber-t);color:#5C4520;border-radius:10px;padding:9px 12px;white-space:pre-line}
+.note b{display:block;font-size:11.5px;font-weight:600;color:var(--amber);margin-bottom:2px}
+.card .spk{position:absolute;right:8px;top:8px;z-index:3}
+.hz{font-family:var(--hz);font-weight:500;font-size:clamp(54px,17vw,80px);line-height:1.15;letter-spacing:.03em}
 .hz.long{font-size:clamp(40px,12vw,62px)}
 .hz.sm{font-size:38px}
 .py{font-family:var(--py);font-size:20px;color:var(--ink2);margin-top:10px}
 .mean{font-size:clamp(21px,6.4vw,28px);font-weight:600;line-height:1.3}
-.back-mean{margin-top:20px}
 .backv{margin-top:16px;font-size:15px}
 .stamp{position:absolute;top:22px;font:700 16px var(--ui);padding:4px 12px;border:2px solid;border-radius:8px;opacity:0;pointer-events:none;z-index:4;background:var(--card)}
 .stamp.ok{left:20px;color:var(--jade);transform:rotate(-9deg)}.stamp.no{right:20px;color:var(--amber);transform:rotate(9deg)}
 .acts{display:flex;align-items:flex-start;justify-content:center;gap:28px;padding:4px 0}
 .act{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
-.round{width:64px;height:64px;border-radius:50%;border:2px solid;background:var(--card);display:grid;place-items:center;cursor:pointer}
-.round.no{border-color:var(--amber);color:var(--amber)}.round.ok{border-color:var(--jade);color:var(--jade)}
-.round.sm{width:48px;height:48px;margin:8px 0;border:1px solid var(--line);color:var(--ink2)}
+.round{width:64px;height:64px;border-radius:50%;border:0;background:var(--card);display:grid;place-items:center;cursor:pointer}
+.round.no{background:#fff;color:var(--ink2);border:1px solid var(--line);box-shadow:0 2px 0 #E9E1D0}.round.ok{background:var(--jade);color:#fff;box-shadow:0 2px 0 #23604B}
+.round:active{transform:translateY(1px)}
+.round.sm{width:48px;height:48px;margin:8px 0;background:transparent;border:0;box-shadow:none;color:var(--ink3)}
 .round:disabled{opacity:.4;cursor:default}
 .hint{text-align:center;font-size:12px;color:var(--ink3);margin:6px 0 0}
 .qcard{position:relative;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px 20px;text-align:center;margin:16px 0}
@@ -160,13 +166,6 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 .hsync{position:absolute;right:-8px;top:0}
 .hexit{position:absolute;right:0;top:4px}
 .hlang{position:absolute;left:-4px;top:2px;min-width:44px;height:38px;padding:0 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:600 14px var(--ui);color:var(--ink2);cursor:pointer}
-.gate{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 8px}
-.gate-q{font-family:var(--hz);font-size:30px;font-weight:700;letter-spacing:.04em}
-.gate .rowbtns{width:100%;max-width:320px}
-.gate .btn{font-family:var(--hz);font-size:20px}
-.gate .btn.ui{font-family:var(--ui);font-size:15px}
-.code{max-width:220px;text-align:center;font:600 26px var(--py);letter-spacing:.4em}
-.code.bad{border-color:var(--amber);animation:shake .32s}
 .hsync.sync-on svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
@@ -176,7 +175,6 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 <div id="app">
   <header class="top">
     <button class="hlang" id="hdr-lang" data-act="lang" aria-label="Language">繁</button>
-    <button class="link hexit" id="hdr-exit" data-act="gate-exit" hidden></button>
     <div class="logo" role="img" aria-label="維英學字"><span>維</span><span>英</span><span>學</span><span>字</span></div>
     <div class="brand-py">Wéi Yīng Xué Zì</div>
     <div class="lastsync" id="lastsync"></div>
@@ -199,7 +197,6 @@ button:focus-visible,label:focus-within{outline:2px solid var(--seal);outline-of
 const KEY='duyanh-hoc-tu-v1',LKEY='duyanh-hoc-tu-lang';
 // Link cầu nối Google Sheet (Apps Script, đuôi /exec).
 const GS_URL='https://script.google.com/macros/s/AKfycbxjTZbd66Dj6jltp0A8XKN8OSgrxhChYHmdiBH3S-f5fOp2uuLDW2oBwF_nnzw814Gn/exec';
-const CODE_HASH='e78f04d78770726a7256ede9d77e9757e20cd890927d4d123670ce41e6f8af3a';
 const INT=[0,1,3,7,14,30];
 const QTIME=10000,REVEAL_MS=3000,SLOTS=5,MIX_MAX=20,MATCH_SEC=10000,MIN_PAIRS=3;
 const SEED={name:'NHÓM 3 - PHƯƠNG HƯỚNG KHÔNG GIAN GIẢI TRÍ',words:[['地方','Địa phương'],['北部','Bắc bộ'],['南部','Nam bộ'],['中埔','Trung bộ'],['電影院','Rạp chiếu phim'],['大樓','Nhà cao tầng'],['游泳池','Hồ bơi']]};
@@ -209,16 +206,15 @@ const CJK=/[\u3400-\u9fff\uf900-\ufaff]/;
 const I18N={
 zh:{tabLearn:'學習',tabProg:'進度',lang:'語言',exit:'離開',
  dueSome:'今天有 <b>{n} 個詞</b>需要複習。',dueNone:'今天沒有需要複習的詞。',streak:'已連續學習 {n} 天。',streak0:'今天學一輪，開始累積連續天數。',reviewBtn:'複習 {n} 個到期的詞',
- guestMsg:'歡迎體驗！不過這是維英的個人 app，你的學習進度不會被記錄喔！',
  mode:'學習方式',mCard:'翻卡',mQuiz:'選擇題',mMatch:'配對',chooseDecks:'選擇詞組',deckMeta:'{n} 個詞，已記住 {p}%',rand:'隨機選',selAll:'全選',selNone:'全部取消',
  noDecks:'還沒有詞組。請先在 Google 試算表新增，再按上方的同步鍵。',start:'開始學 {n} 個詞',startNone:'請至少選一個詞組',
  hintMixMax:'混合 {d} 個詞組（共 {n} 個詞）：每輪最多 {m} 個詞，下一輪優先出還沒練到的詞。',hintMixAll:'混合 {d} 個詞組，全部 {n} 個詞。',hintSingle:'學完整個詞組。',randToast:'已隨機選了 {n} 個詞組',
  statWords:'個詞',statMem:'個詞已記住',statStreak:'連續天數',levels:'記憶程度',levelNames:['未學','新學／剛忘記','1 天後複習','3 天後複習','7 天後複習','14 天後複習','已熟記'],
  hard:'常忘的詞',wrongN:'錯 {n} 次',hardBtn:'用選擇題複習這些詞',hardNone:'還沒有錯兩次以上的詞。',decksH:'各詞組',deckCard:'{n} 個詞，已記住 {k}/{n}',deckDue:'，{d} 個到期',
- back:'‹ 進度',deckInfo:'{n} 個詞，已記住 {k} 個。',studyDeck:'學這個詞組',deckNote:'點詞可以聽發音。要修改詞，請在 Google 試算表修改再同步。拼音由 app 自動產生，若有錯，可在試算表加「Pinyin」欄，只填寫錯的那個詞。五個綠點代表記憶程度。',
- notLinked:'尚未連接 Google 試算表',neverSynced:'尚未同步',lastSync:'上次同步：{t}',syncing:'同步中…',guestLine:'訪客模式：不保存進度',
- codeSub:'',enter:'進入',goBack:'返回',codeErr:'密碼不對，再試一次。',
- ok:'記得',no:'還不會',flip:'點一下翻面',undo:'復原',cardHint:'會了往右滑，不會往左滑',
+ back:'‹ 進度',deckInfo:'{n} 個詞，已記住 {k} 個。',studyDeck:'學這個詞組',deckNote:'點詞可以聽發音。要修改詞，請在 Google 試算表修改再同步。拼音由 app 自動產生，若有錯，可在試算表加「Pinyin」欄，只填寫錯的那個詞。五個綠點代表記憶程度。想加記憶提示，可在試算表加「Ghi chú」欄。',
+ notLinked:'尚未連接 Google 試算表',neverSynced:'尚未同步',lastSync:'上次同步：{t}',syncing:'同步中…',
+
+ ok:'記得',no:'還不會',note:'備註',undo:'復原',cardHint:'會了往右滑，不會往左滑',
  timeUp10:'時間到。',notQuite:'不對喔。',answer:'答案：',next:'下一題',
  mistakes:'配錯：{n}',secLeft:'剩 {s} 秒',matchHint:'先點漢字，再點對應的意思。平均每 10 秒要配對一個，不然就輸了。',
  lostTitle:'時間到！',lostText:'你配對了 {k}/{n} 個詞。平均每 10 秒要配對一個。',playAgain:'再玩一次',
@@ -228,16 +224,15 @@ zh:{tabLearn:'學習',tabProg:'進度',lang:'語言',exit:'離開',
  errClaude:'Claude 預覽版無法連線，放上 GitHub 後就能同步。',errNet:'連不上 Google 試算表，請檢查網路。',errGen:'同步失敗：{e}',noSpeech:'這個瀏覽器不支援朗讀',storeFail:'這台裝置無法儲存資料'},
 en:{tabLearn:'Learn',tabProg:'Progress',lang:'Language',exit:'Exit',
  dueSome:'<b>{n} words</b> are due for review today.',dueNone:'No words are due for review today.',streak:'You\u2019ve studied {n} days in a row.',streak0:'Finish one round today to start a streak.',reviewBtn:'Review {n} due words',
- guestMsg:'You\u2019re welcome to try it out, but your progress won\u2019t be saved since this is Duy Anh\u2019s personal app!',
  mode:'Mode',mCard:'Flashcards',mQuiz:'Quiz',mMatch:'Match',chooseDecks:'Choose decks',deckMeta:'{n} words, {p}% learned',rand:'Random pick',selAll:'Select all',selNone:'Clear all',
  noDecks:'No decks yet. Add one to the Google Sheet, then tap sync at the top.',start:'Start {n} words',startNone:'Pick at least one deck',
  hintMixMax:'Mixing {d} decks ({n} words): up to {m} words per round; the next round favors words not yet covered.',hintMixAll:'Mixing {d} decks, all {n} words.',hintSingle:'Every word in the deck.',randToast:'Randomly picked {n} decks',
  statWords:'words in decks',statMem:'words remembered',statStreak:'day streak',levels:'Memory level',levelNames:['Not started','New / just forgot','Review in 1 day','Review in 3 days','Review in 7 days','Review in 14 days','Mastered'],
  hard:'Often forgotten',wrongN:'wrong {n}\u00d7',hardBtn:'Review these with a quiz',hardNone:'No word has been missed twice yet.',decksH:'Decks',deckCard:'{n} words, {k}/{n} learned',deckDue:', {d} due',
- back:'\u2039 Progress',deckInfo:'{n} words, {k} learned.',studyDeck:'Study this deck',deckNote:'Tap a word to hear it. To change a word, edit the Google Sheet, then sync. Pinyin is generated automatically; if one is wrong, add a \u201cPinyin\u201d column to the Sheet and fill in just that word. The five green dots show how well you remember it.',
- notLinked:'Google Sheet not linked',neverSynced:'Not synced yet',lastSync:'Last synced: {t}',syncing:'Syncing\u2026',guestLine:'Guest mode: progress isn\u2019t saved',
- codeSub:'Enter the code',enter:'Enter',goBack:'Back',codeErr:'Wrong code, try again.',
- ok:'Got it',no:'Not yet',flip:'Tap to flip',undo:'Undo',cardHint:'Swipe right if you know it, left if you don\u2019t',
+ back:'\u2039 Progress',deckInfo:'{n} words, {k} learned.',studyDeck:'Study this deck',deckNote:'Tap a word to hear it. To change a word, edit the Google Sheet, then sync. Pinyin is generated automatically; if one is wrong, add a \u201cPinyin\u201d column to the Sheet and fill in just that word. The five green dots show how well you remember it. To add memory tips, add a \u201cGhi chú\u201d column.',
+ notLinked:'Google Sheet not linked',neverSynced:'Not synced yet',lastSync:'Last synced: {t}',syncing:'Syncing\u2026',
+
+ ok:'Got it',no:'Not yet',note:'Note',undo:'Undo',cardHint:'Swipe right if you know it, left if you don\u2019t',
  timeUp10:'Time\u2019s up.',notQuite:'Not quite.',answer:'Answer:',next:'Next',
  mistakes:'Mistakes: {n}',secLeft:'{s}s left',matchHint:'Tap a character, then its meaning. Average one match every 10 seconds or you lose.',
  lostTitle:'Time\u2019s up!',lostText:'You matched {k}/{n} words. You need one match every 10 seconds on average.',playAgain:'Play again',
@@ -247,16 +242,15 @@ en:{tabLearn:'Learn',tabProg:'Progress',lang:'Language',exit:'Exit',
  errClaude:'The Claude preview can\u2019t connect out. Sync works once the app is on GitHub.',errNet:'Couldn\u2019t reach the Google Sheet. Check your connection.',errGen:'Sync failed: {e}',noSpeech:'This browser can\u2019t read aloud',storeFail:'This device can\u2019t save data'},
 vi:{tabLearn:'Học',tabProg:'Tiến độ',lang:'Ngôn ngữ',exit:'Thoát',
  dueSome:'Hôm nay có <b>{n} từ</b> đến hạn ôn.',dueNone:'Hôm nay không có từ nào đến hạn ôn.',streak:'Bạn đã học {n} ngày liên tiếp.',streak0:'Học một lượt hôm nay để bắt đầu chuỗi ngày học.',reviewBtn:'Ôn {n} từ đến hạn',
- guestMsg:'Mời bạn trải nghiệm, tuy nhiên tiến độ của bạn không được ghi lại vì đây là app sử dụng riêng của Duy Anh ạ!',
  mode:'Cách học',mCard:'Thẻ lật',mQuiz:'Trắc nghiệm',mMatch:'Nối từ',chooseDecks:'Chọn bộ để học',deckMeta:'{n} từ, đã thuộc {p}%',rand:'Chọn ngẫu nhiên',selAll:'Chọn tất cả',selNone:'Bỏ chọn hết',
  noDecks:'Chưa có bộ từ nào. Thêm bộ từ vào Google Sheet rồi bấm nút đồng bộ ở góc trên.',start:'Bắt đầu học {n} từ',startNone:'Chọn ít nhất một bộ để bắt đầu',
  hintMixMax:'Trộn {d} bộ ({n} từ): mỗi lượt tối đa {m} từ, lượt sau ưu tiên các từ chưa học để ôn đều.',hintMixAll:'Trộn {d} bộ, học hết {n} từ.',hintSingle:'Học hết các từ trong bộ.',randToast:'Đã chọn ngẫu nhiên {n} bộ',
  statWords:'từ trong các bộ',statMem:'từ đang nhớ',statStreak:'ngày học liên tiếp',levels:'Từ theo mức ghi nhớ',levelNames:['Chưa học','Mới học, vừa quên','Ôn sau 1 ngày','Ôn sau 3 ngày','Ôn sau 7 ngày','Ôn sau 14 ngày','Thuộc chắc'],
  hard:'Từ hay quên',wrongN:'sai {n} lần',hardBtn:'Ôn các từ này bằng trắc nghiệm',hardNone:'Chưa có từ nào sai từ 2 lần trở lên.',decksH:'Từng bộ từ',deckCard:'{n} từ, đã thuộc {k}/{n}',deckDue:', {d} từ đến hạn ôn',
- back:'‹ Tiến độ',deckInfo:'{n} từ, đã thuộc {k}.',studyDeck:'Học bộ này',deckNote:'Chạm vào từ để nghe. Muốn sửa từ, sửa trong Google Sheet rồi bấm đồng bộ. Pinyin do web tự tạo; nếu từ nào bị sai, thêm cột “Pinyin” vào Sheet và gõ đúng cho riêng từ đó. Năm chấm xanh là mức ghi nhớ của từ.',
- notLinked:'Chưa nối Google Sheet',neverSynced:'Chưa đồng bộ lần nào',lastSync:'Đồng bộ lần cuối: {t}',syncing:'Đang đồng bộ…',guestLine:'Chế độ khách: tiến độ không được lưu',
- codeSub:'Nhập mã để vào',enter:'Vào',goBack:'Quay lại',codeErr:'Mã chưa đúng, thử lại nhé.',
- ok:'Thuộc',no:'Chưa thuộc',flip:'Chạm để lật',undo:'Hoàn tác',cardHint:'Quẹt phải nếu đã thuộc, quẹt trái nếu chưa thuộc',
+ back:'‹ Tiến độ',deckInfo:'{n} từ, đã thuộc {k}.',studyDeck:'Học bộ này',deckNote:'Chạm vào từ để nghe. Muốn sửa từ, sửa trong Google Sheet rồi bấm đồng bộ. Pinyin do web tự tạo; nếu từ nào bị sai, thêm cột “Pinyin” vào Sheet và gõ đúng cho riêng từ đó. Năm chấm xanh là mức ghi nhớ của từ. Muốn thêm mẹo nhớ, thêm cột “Ghi chú” vào Sheet.',
+ notLinked:'Chưa nối Google Sheet',neverSynced:'Chưa đồng bộ lần nào',lastSync:'Đồng bộ lần cuối: {t}',syncing:'Đang đồng bộ…',
+
+ ok:'Thuộc',no:'Chưa thuộc',note:'Ghi chú',undo:'Hoàn tác',cardHint:'Quẹt phải nếu đã thuộc, quẹt trái nếu chưa thuộc',
  timeUp10:'Hết 10 giây.',notQuite:'Chưa đúng.',answer:'Đáp án:',next:'Câu tiếp',
  mistakes:'Nối sai: {n}',secLeft:'Còn {s} giây',matchHint:'Chạm một chữ Hán rồi chạm nghĩa tương ứng. Trung bình 10 giây phải nối được một cặp, không là thua.',
  lostTitle:'Hết giờ!',lostText:'Bạn nối được {k}/{n} từ. Trung bình mỗi 10 giây phải nối được một cặp.',playAgain:'Chơi lại',
@@ -276,7 +270,7 @@ function blank(){return{v:3,decks:{},prog:{},days:[],set:{mode:'card'},ui:{sel:[
 let S;
 try{S=JSON.parse(localStorage.getItem(KEY))||blank()}catch(e){S=blank()}
 S=Object.assign(blank(),S);S.set=Object.assign(blank().set,S.set);S.ui=Object.assign({sel:[],rot:{}},S.ui);S.gs=Object.assign({last:0},S.gs,{url:GS_URL});
-let mode='gate',gateStep='ask',ownerS=null;
+let mode='owner';
 let saveT;
 function persist(){if(mode!=='owner')return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast(t('storeFail'))}}
 function save(){if(mode!=='owner')return;clearTimeout(saveT);saveT=setTimeout(persist,120)}
@@ -366,16 +360,16 @@ function parseRows(rows){
   if(hdr<0){start=rows.findIndex(r=>CJK.test(String((r||[])[0]??'')));if(start<0)start=rows.length}
   let title='';
   for(let i=0;i<(hdr<0?start:hdr);i++){const cells=(rows[i]||[]).map(c=>String(c??'').trim()).filter(Boolean);if(cells.length===1&&!CJK.test(cells[0]))title=cells[0]}
-  let cH=0,cP=1,cV=2;
+  let cH=0,cP=1,cV=2,cN=-1;
   if(hdr>=0){const r=(rows[hdr]||[]).map(c=>strip(c).toLowerCase());const f=(...k)=>r.findIndex(c=>k.some(x=>c.includes(x)));
-    const a=f('chu han','han tu','hanzi'),b=f('pinyin'),c=f('tieng viet','nghia');cH=a>=0?a:0;cP=b;cV=c>=0?c:[0,1,2].find(x=>x!==cH&&x!==cP)}
+    const a=f('chu han','han tu','hanzi'),b=f('pinyin'),c=f('tieng viet','nghia'),n=f('ghi chu','chu thich','note','meo');cH=a>=0?a:0;cP=b;cV=c>=0?c:[0,1,2].find(x=>x!==cH&&x!==cP&&x!==n);cN=n}
   else if(!rows.slice(start).some(r=>String((r||[])[2]??'').trim())){cP=-1;cV=1}
   const words=[],seen=new Set();
   for(let i=start;i<rows.length;i++){
-    const r=rows[i]||[];const h=String(r[cH]??'').replace(/\s+/g,'');const v=String(r[cV]??'').trim().replace(/\s+/g,' ');let p=cP>=0?normPy(r[cP]):'';
+    const r=rows[i]||[];const h=String(r[cH]??'').replace(/\s+/g,'');const v=String(r[cV]??'').trim().replace(/\s+/g,' ');let p=cP>=0?normPy(r[cP]):'';const nt=cN>=0?String(r[cN]??'').replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n{2,}/g,'\n').trim():'';
     if(!h||!CJK.test(h)||!v||seen.has(h))continue;seen.add(h);
     if(!p)p=autoPy(h);
-    words.push({h,p,v});
+    words.push(nt?{h,p,v,n:nt}:{h,p,v});
   }
   return{title,words};
 }
@@ -426,16 +420,10 @@ async function syncAll(){
     }
     if(Object.values(S.decks).some(d=>d.src==='gs'))for(const d of Object.values(S.decks))if(d.src!=='gs')delete S.decks[d.key];
     S.ui.sel=S.ui.sel.filter(k=>S.decks[k]);if(!S.ui.sel.length&&Object.keys(S.decks).length)S.ui.sel=[Object.keys(S.decks)[0]];
-    if(mode==='owner'){mergeProg(j.progress);await gsPost({action:'saveProgress',rows:progRows()})}
     S.gs.last=Date.now();save();
     toast(n?t('synced',{n}):t('sheetEmpty'));
   }catch(e){toast(syncErr(e),4200)}
   finally{syncing=false;setSyncUI(false);if(!sess)render()}
-}
-async function syncProgress(){
-  if(mode!=='owner'||!S.gs.url||syncing||inClaude())return;syncing=true;
-  try{const j=await gsGet({action:'progress'});mergeProg(j.progress);await gsPost({action:'saveProgress',rows:progRows()});S.gs.last=Date.now();save()}
-  catch(e){}finally{syncing=false;if(!sess)render()}
 }
 function setSyncUI(on){const b=$('#hdr-sync');if(b)b.classList.toggle('sync-on',on);if(on){const ls=$('#lastsync');if(ls)ls.textContent=t('syncing')}}
 
@@ -445,13 +433,10 @@ function render(){
   document.documentElement.lang=LANGS.find(l=>l[0]===lang)[3];
   $('#hdr-lang').textContent=LANGS.find(l=>l[0]===lang)[1];
   $('#tab-learn').textContent=t('tabLearn');$('#tab-prog').textContent=t('tabProg');
-  const guest=mode==='guest';
-  $('.tabbar').hidden=mode!=='owner';
-  const ex=$('#hdr-exit');ex.hidden=!guest;ex.textContent=t('exit');
+  $('.tabbar').hidden=false;
   document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.v===tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
-  if(mode==='gate'){$('#hdr-sync').hidden=true;$('#lastsync').textContent='';$('#main').innerHTML=vGate();const c=$('#gate-code');if(c)setTimeout(()=>c.focus(),50);return}
-  $('#hdr-sync').hidden=!S.gs.url||guest;
-  $('#lastsync').textContent=guest?t('guestLine'):!S.gs.url?t('notLinked'):S.gs.last?t('lastSync',{t:fmtDate(S.gs.last)}):t('neverSynced');
+  $('#hdr-sync').hidden=!S.gs.url;
+  $('#lastsync').textContent=!S.gs.url?t('notLinked'):S.gs.last?t('lastSync',{t:fmtDate(S.gs.last)}):t('neverSynced');
   $('#main').innerHTML=tab==='learn'?vLearn():(deckOpen&&S.decks[deckOpen]?vDeck(S.decks[deckOpen]):vProg());
 }
 function seg(act,cur,opts){return`<div class="seg" role="group">${opts.map(([k,l])=>`<button data-act="${act}" data-v="${k}" aria-pressed="${String(cur)===String(k)}">${l}</button>`).join('')}</div>`}
@@ -459,8 +444,7 @@ function vLearn(){
   const decks=Object.values(S.decks);const due=dueWords().length;const st=streak();
   S.ui.sel=S.ui.sel.filter(k=>S.decks[k]);
   const n=poolFrom(S.ui.sel).length;const mix=S.ui.sel.length>1;const take=mix?Math.min(n,MIX_MAX):n;const d=S.ui.sel.length;
-  const top=mode==='guest'?`<section class="panel today"><div class="today-txt">${t('guestMsg')}</div></section>`
-    :`<section class="panel today"><div class="today-txt">${due?t('dueSome',{n:due}):t('dueNone')}</div><div class="small muted">${st?t('streak',{n:st}):t('streak0')}</div>${due?`<button class="btn primary block" data-act="start-due">${t('reviewBtn',{n:due})}</button>`:''}</section>`;
+  const top=`<section class="panel today"><div class="today-txt">${due?t('dueSome',{n:due}):t('dueNone')}</div><div class="small muted">${st?t('streak',{n:st}):t('streak0')}</div>${due?`<button class="btn primary block" data-act="start-due">${t('reviewBtn',{n:due})}</button>`:''}</section>`;
   return`${top}
   <h2>${t('mode')}</h2>${seg('mode',S.set.mode,[['card',t('mCard')],['quiz',t('mQuiz')],['match',t('mMatch')]])}
   <h2>${t('chooseDecks')}</h2>
@@ -492,39 +476,12 @@ function vDeck(d){
   <p class="small muted">${t('deckNote')}</p>`;
 }
 
-/* ---------- cửa vào: chủ app hay khách ---------- */
-function vGate(){
-  if(gateStep==='ask')return`<div class="gate"><div class="gate-q">你是維英嗎？</div><div class="rowbtns"><button class="btn primary" data-act="gate-yes">是</button><button class="btn" data-act="gate-no">不是</button></div></div>`;
-  return`<div class="gate"><div class="gate-q">請輸入密碼</div>${t('codeSub')?`<div class="small muted">${t('codeSub')}</div>`:''}
-  <input class="field code" id="gate-code" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" aria-label="code">
-  <div class="small warn" id="gate-err" role="alert"></div>
-  <div class="rowbtns"><button class="btn primary ui" data-act="gate-check">${t('enter')}</button><button class="btn ui" data-act="gate-back">${t('goBack')}</button></div></div>`;
-}
-async function sha256(x){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(x));return[...new Uint8Array(b)].map(y=>y.toString(16).padStart(2,'0')).join('')}
-let checking=false;
-async function checkCode(){
-  const el=$('#gate-code');if(!el||checking)return;checking=true;
-  let ok=false;try{ok=await sha256(el.value.trim())===CODE_HASH}catch(e){}
-  checking=false;
-  if(ok){enterOwner();return}
-  vibe([20,40,20]);el.value='';el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');$('#gate-err').textContent=t('codeErr');el.focus();
-}
+/* ---------- vào thẳng app ---------- */
 function prepState(st){
   if(!st.seeded){st.seeded=true;if(!Object.keys(st.decks).length){const k=deckKey(SEED.name);st.decks[k]={key:k,name:SEED.name,src:'seed',words:SEED.words.map(([h,v])=>({h,p:'',v})),updated:Date.now()};st.ui.sel=[k]}}
   if(window.pinyinPro){for(const d of Object.values(st.decks))for(const w of d.words)if(!w.p)w.p=autoPy(w.h)}
 }
 function enterOwner(){mode='owner';tab='learn';deckOpen=null;prepState(S);save();render();if(S.gs.url&&!inClaude())syncAll()}
-function enterGuest(){
-  ownerS=S;const g=blank();
-  for(const d of Object.values(ownerS.decks))g.decks[d.key]={...d,words:d.words.map(w=>({...w}))};
-  g.seeded=ownerS.seeded;g.ui.sel=(ownerS.ui.sel||[]).filter(k=>g.decks[k]);
-  S=g;mode='guest';tab='learn';deckOpen=null;prepState(S);render();
-  if(S.gs.url&&!inClaude())syncAll();
-}
-function exitGuest(){
-  clearInterval(timerI);clearQ();sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');closeSheet();
-  if(ownerS)S=ownerS;ownerS=null;mode='gate';gateStep='ask';tab='learn';deckOpen=null;render();
-}
 
 /* ---------- bảng chọn ngôn ngữ ---------- */
 function openSheet(html){const s=$('#sheet');s.innerHTML=`<div class="sheetin" role="dialog" aria-modal="true">${html}</div>`;s.hidden=false}
@@ -544,7 +501,7 @@ function startSession(words,title,md=S.set.mode){
   if(md==='match'){const hs=words.map(w=>w.h);sess.mm={QL:shuffle(hs),QR:shuffle(hs),VL:Array(SLOTS).fill(null),VR:Array(SLOTS).fill(null),sel:null,matched:0,fresh:new Set(),deadline:Date.now()+MATCH_SEC};mmFill(sess.mm)}
   closeSheet();$('#session').hidden=false;document.body.classList.add('lock');renderSession();
 }
-function endSession(){clearInterval(timerI);clearQ();const had=!!sess;sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');render();if(had)syncProgress()}
+function endSession(){clearInterval(timerI);clearQ();const had=!!sess;sess=null;$('#session').hidden=true;$('#session').innerHTML='';document.body.classList.remove('lock');render()}
 function finish(){sess.summary=true;sess.tEnd=Date.now();clearInterval(timerI);clearQ()}
 function renderSession(){
   const s=sess;if(!s)return;
@@ -559,13 +516,12 @@ function renderSession(){
 /* thẻ lật: mặt trước chữ Hán, mặt sau chữ Hán + pinyin + nghĩa */
 function vCard(){
   const s=sess;const w=s.map[s.queue[0]];const cls=[...w.h].length>3?'hz long':'hz';
-  return`<div class="stage">${s.queue.length>1?'<div class="peek"></div>':''}<div class="card" id="card" tabindex="0">
+  return`<div class="stage">${s.queue.length>2?'<div class="peek p2"></div>':''}${s.queue.length>1?'<div class="peek"></div>':''}<div class="card" id="card" tabindex="0">
     <span class="stamp ok">${t('ok')}</span><span class="stamp no">${t('no')}</span>
-    <div class="flip"><div class="face front"><div class="${cls}">${esc(w.h)}</div><span class="fliphint">${t('flip')}</span></div>
-    <div class="face back"><div class="hz sm">${esc(w.h)}</div>${w.p?`<div class="py">${esc(w.p)}</div>`:''}<div class="mean back-mean">${esc(w.v)}</div></div></div>
+    <div class="face"><div class="ctop"><div class="${cls}">${esc(w.h)}</div></div>
+    <div class="crev">${w.p?`<div class="py">${esc(w.p)}</div>`:''}<div class="mean">${esc(w.v)}</div>${w.n?`<div class="note"><b>${t('note')}</b>${esc(w.n)}</div>`:''}</div></div>
     <button class="icon spk" data-act="say" data-t="${esc(w.h)}" aria-label="play">${ICON.spk}</button></div></div>
-  <div class="acts"><div class="act"><button class="round no" data-act="left" aria-label="${t('no')}">${ICON.left}</button>${t('no')}</div><div class="act"><button class="round sm" data-act="undo" aria-label="${t('undo')}" ${s.hist.length?'':'disabled'}>${ICON.undo}</button>${t('undo')}</div><div class="act"><button class="round ok" data-act="right" aria-label="${t('ok')}">${ICON.check}</button>${t('ok')}</div></div>
-  <p class="hint">${t('cardHint')}</p>`;
+  <div class="acts"><div class="act"><button class="round no" data-act="left" aria-label="${t('no')}">${ICON.left}</button>${t('no')}</div><div class="act"><button class="round sm" data-act="undo" aria-label="${t('undo')}" ${s.hist.length?'':'disabled'}>${ICON.undo}</button>${t('undo')}</div><div class="act"><button class="round ok" data-act="right" aria-label="${t('ok')}">${ICON.check}</button>${t('ok')}</div></div>`;
 }
 function bindCard(){
   const card=$('#card');if(!card)return;
@@ -577,7 +533,7 @@ function bindCard(){
   card.addEventListener('pointerup',e=>{if(!drag||e.pointerId!==pid)return;drag=false;const a=Math.abs(dx);if(a>90)fling(dx>0);else{reset();if(a<8&&Date.now()-t0<450)flip()}});
   card.addEventListener('pointercancel',()=>{drag=false;reset()});
 }
-function flip(){const c=$('#card');if(c)c.classList.toggle('flipped')}
+function flip(){const c=$('#card');if(c)c.classList.toggle('shown')}
 function fling(right){
   const c=$('#card');if(!c||flinging)return;flinging=true;vibe(12);
   c.style.transition='transform .28s ease-in';const w=Math.max(window.innerWidth,400);
@@ -687,11 +643,6 @@ document.addEventListener('click',e=>{
   switch(act){
     case'lang':openLang();break;
     case'set-lang':lang=v;try{localStorage.setItem(LKEY,v)}catch(_){}closeSheet();render();if(sess)renderSession();break;
-    case'gate-yes':gateStep='code';render();break;
-    case'gate-back':gateStep='ask';render();break;
-    case'gate-no':enterGuest();break;
-    case'gate-check':checkCode();break;
-    case'gate-exit':exitGuest();break;
     case'tab':tab=v;deckOpen=null;closeSheet();render();scrollTo(0,0);break;
     case'mode':S.set.mode=v;save();render();break;
     case'rand':{const keys=Object.keys(S.decks);if(!keys.length)break;const n=keys.length<=2?keys.length:2+Math.floor(Math.random()*Math.min(2,keys.length-2));S.ui.sel=shuffle(keys).slice(0,n);save();render();toast(t('randToast',{n}));break}
@@ -722,9 +673,7 @@ document.addEventListener('change',e=>{
   const a=e.target.closest('[data-act]');if(!a)return;
   if(a.dataset.act==='sel'){const k=a.dataset.k;S.ui.sel=a.checked?[...new Set([...S.ui.sel,k])]:S.ui.sel.filter(x=>x!==k);save();render()}
 });
-document.addEventListener('input',e=>{if(e.target.id==='gate-code'){e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);$('#gate-err').textContent='';if(e.target.value.length===6)checkCode()}});
 document.addEventListener('keydown',e=>{
-  if(e.target.id==='gate-code'&&e.key==='Enter'){checkCode();return}
   if(e.key==='Escape'&&!$('#sheet').hidden){closeSheet();return}
   if(!sess||sess.summary||!$('#sheet').hidden)return;
   if(sess.mode==='card'){
@@ -735,7 +684,7 @@ document.addEventListener('keydown',e=>{
   }else if(sess.mode==='quiz'&&/^[1-4]$/.test(e.key)){const b=document.querySelectorAll('.opt')[+e.key-1];if(b)b.click()}
 });
 
-initLibs();render();
+initLibs();enterOwner();
 </script>
 </body>
 </html>
